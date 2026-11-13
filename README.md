@@ -2,6 +2,10 @@
 
 Entrenador de lectura de ECG para SVA extrahospitalaria: ECG reales de 12 derivaciones, sin contexto, con artefacto de ambulancia simulado electrodo a electrodo.
 
+**Abrir el entrenador:** https://davidrope93-svg.github.io/ecg-desnudo/
+
+Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes de ECG previstas y lo que cubre cada una están en [FUENTES.md](FUENTES.md).
+
 ## Qué hay en la v0.1
 
 - **158 ECG reales** de PTB-XL (500 Hz → 250 Hz), 22 diagnósticos en 4 grupos (ritmo, conducción, isquemia, otros). Cada ECG se eligió con doble concordancia: etiqueta del cardiólogo (PTB-XL, validada) + interpretación de GE 12SL (PTB-XL+) + medidas (FC, PR, QRS, QTc, desnivel del ST). Los SCACEST exigen estadio agudo o «STEMI» de 12SL, elevación medida y, en el inferior, especular en aVL.
