@@ -1,0 +1,121 @@
+<title>ECG desnudo · entrenador de lectura</title>
+<style>
+:root{--ink:#16191d;--ink2:#2a3038;--muted:#5f6873;--bg:#f3f0ea;--card:#fff;--line:#e2dcd2;--red:#b3202a;--red2:#d9434c;--teal:#0f5f66;--ok:#1d7a46;--okbg:#e6f4ec;--warn:#9a6312;--warnbg:#fbf1dd;--bad:#b3202a;--badbg:#fbe9ea;--r:12px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,select{font:inherit;color:inherit}
+header.top{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-left)) 10px max(14px,env(safe-area-inset-right))}
+header.top .brand{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+header.top h1{font-size:17px;margin:0;letter-spacing:.2px;font-weight:700}
+header.top h1 span{font-weight:400;opacity:.65;font-size:13px;margin-left:6px}
+header.top .sp{flex:1}
+@media (max-width:560px){header.top h1 span{display:none}.tool{padding:6px 8px;font-size:13px}.tools{top:46px}}
+.hbtn{background:transparent;border:1px solid #ffffff33;color:#fff;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:13px}
+.hbtn:hover{background:#ffffff14}
+main{max-width:1180px;margin:0 auto;padding:14px max(12px,env(safe-area-inset-left)) 40px max(12px,env(safe-area-inset-right))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:720px){.grid3{grid-template-columns:1fr}}
+.mode{cursor:pointer;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:var(--r);padding:16px;transition:transform .08s,border-color .15s}
+.mode:hover{border-color:var(--ink2)}
+.mode:active{transform:scale(.99)}
+.mode b{display:block;font-size:17px;margin-bottom:4px}
+.mode.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.mode.primary .muted{color:#ffffffb0}
+.hero{margin:6px 2px 16px}
+.hero h2{font-size:24px;line-height:1.2;margin:0 0 6px;letter-spacing:-.2px}
+.hero p{margin:0;color:var(--muted);max-width:760px}
+.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:18px 2px 8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:8px 12px;cursor:pointer;border-right:1px solid var(--line);font-size:14px}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:14px}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.set .seg,.set>.row{justify-self:start}
+.set{display:grid;grid-template-columns:150px 1fr;gap:10px 14px;align-items:center}
+@media (max-width:620px){.set{grid-template-columns:1fr}}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600}
+.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.casebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.casebar .title{font-weight:700}
+.pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12.5px;background:#fff;border:1px solid var(--line)}
+.tools{position:sticky;top:52px;z-index:10;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--bg);padding:6px 0 8px}
+.tool{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:13.5px;white-space:nowrap}
+.tool.on{background:var(--red);border-color:var(--red);color:#fff}
+.tool select{border:0;background:transparent;padding:0;font-size:13.5px}
+.paperwrap{position:relative;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff8f6;-webkit-overflow-scrolling:touch}
+.paperwrap canvas{display:block}
+.paperwrap canvas.ov{position:absolute;left:0;top:0}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 2px 0}
+details.sys{margin-top:10px}
+details.sys summary{cursor:pointer;color:var(--muted);font-size:13.5px}
+details.sys ol{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink2)}
+.answers{margin-top:14px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px 14px;cursor:pointer;font-size:15px;font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--ink2)}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.opt.partial{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+.opt.bad{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.opt.dim{opacity:.5}
+.glist{display:grid;gap:10px}
+.glist .g b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.glist .g .row{gap:6px}
+.glist .opt{padding:8px 11px;font-size:14px;font-weight:600;border-radius:999px}
+.fb{scroll-margin-top:70px;margin-top:14px;border-radius:var(--r);border:1px solid var(--line);background:#fff;overflow:hidden}
+.fb .verdict{padding:12px 16px;font-weight:700;font-size:16px}
+.fb .verdict.ok{background:var(--okbg);color:var(--ok)}
+.fb .verdict.partial{background:var(--warnbg);color:var(--warn)}
+.fb .verdict.bad{background:var(--badbg);color:var(--bad)}
+.fb .verdict.info{background:#eef2f4;color:var(--ink2)}
+.fb .body{padding:14px 16px;display:grid;gap:12px}
+.fb h3{margin:0;font-size:19px}
+.fb h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.fb ul{margin:0;padding-left:18px}
+.fb li{margin:2px 0}
+.facts{display:flex;flex-wrap:wrap;gap:6px}
+.facts span{background:#f4f1ec;border-radius:7px;padding:3px 8px;font-size:13px;font-variant-numeric:tabular-nums}
+.callout{border-left:3px solid var(--red);padding:2px 0 2px 10px}
+.callout.teal{border-color:var(--teal)}
+.src{font-size:12px;color:var(--muted)}
+.next{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.stat{display:grid;grid-template-columns:minmax(150px,240px) 1fr 70px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #f0ebe3;font-size:14px}
+.bar{height:8px;border-radius:5px;background:#eee8df;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok)}
+.res{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid #f0ebe3;cursor:pointer}
+.res:hover{background:#faf8f4}
+.dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
+.dot.ok{background:var(--ok)}.dot.partial{background:var(--warn)}.dot.bad{background:var(--bad)}
+.big{font-size:44px;font-weight:800;letter-spacing:-1px;line-height:1}
+.atlas{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.atlas button{text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
+.atlas button small{display:block;color:var(--muted)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;font-weight:600}
+footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;font-size:12px;color:var(--muted)}
+footer a{color:inherit}
+.hidden{display:none!important}
+</style>
+<!--BODY-->
+<header class="top">
+  <div class="brand" id="home-link">
+    <svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><path d="M1 12h7l2-4 2 9 3-16 3 14 2-3h9" fill="none" stroke="#e5484d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <h1>ECG desnudo<span>entrenador de lectura</span></h1>
+  </div>
+  <div class="sp"></div>
+  <button class="hbtn" id="btn-stats">Progreso</button>
+</header>
+<main id="app"></main>
+<footer>ECG reales de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> (Wagner et al., 2020) y medidas de <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Strodthoff et al., 2023), PhysioNet, CC BY 4.0. El artefacto extrahospitalario es simulado. Herramienta docente.</footer>
+<div class="loading" id="loading">Preparando los electros…</div>
+<script>
+/*DATA*/
+/*CONTENT*/
+/*ENGINE*/
+/*UI*/
+</script>
