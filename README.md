@@ -1,4 +1,6 @@
-# ECG desnudo · entrenador de lectura
+# ECG en Ruta · entrenador de ECG para emergencias extrahospitalarias
+
+(Antes «ECG desnudo». El repositorio y la dirección web conservan el nombre antiguo hasta tener dominio propio.)
 
 Entrenador de lectura de ECG para SVA extrahospitalaria: ECG reales de 12 derivaciones, sin contexto, con artefacto de ambulancia simulado electrodo a electrodo.
 
@@ -34,7 +36,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 218 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 219 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```

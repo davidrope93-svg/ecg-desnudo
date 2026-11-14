@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16191d">
-<title>ECG desnudo · entrenador de lectura</title>
+<title>ECG en Ruta · entrenador de ECG para emergencias extrahospitalarias</title>
+<meta name="description" content="Entrenador de lectura de ECG para emergencias extrahospitalarias: ECG reales, artefacto de ambulancia, monitor de parada y periparada con conducta según el ERC 2025.">
+<meta name="apple-mobile-web-app-title" content="ECG en Ruta">
 <style>
 :root{--ink:#16191d;--ink2:#2a3038;--muted:#5f6873;--bg:#f3f0ea;--card:#fff;--line:#e2dcd2;--red:#b3202a;--red2:#d9434c;--teal:#0f5f66;--ok:#1d7a46;--okbg:#e6f4ec;--warn:#9a6312;--warnbg:#fbf1dd;--bad:#b3202a;--badbg:#fbe9ea;--r:12px}
 *{box-sizing:border-box}
@@ -126,7 +128,7 @@ footer a{color:inherit}
 <header class="top">
   <div class="brand" id="home-link">
     <svg width="30" height="20" viewBox="0 0 30 20" aria-hidden="true"><path d="M1 12h7l2-4 2 9 3-16 3 14 2-3h9" fill="none" stroke="#e5484d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    <h1>ECG desnudo<span>entrenador de lectura</span></h1>
+    <h1>ECG en Ruta<span>entrenador de ECG para emergencias</span></h1>
   </div>
   <div class="sp"></div>
   <button class="hbtn" id="btn-stats">Progreso</button>
@@ -1007,7 +1009,7 @@ if (typeof module !== 'undefined') module.exports = { imgOptions, gradeImg, appl
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const KEY = 'ecgdesnudo.v1';
+const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
   const el = document.createElement(tag);
@@ -1340,7 +1342,7 @@ function home() {
       h('div', {}, h('b', {}, 'Temas'), h('div', { class: 'small muted' }, n + ' ECG seleccionados')),
       h('div', { class: 'row' }, Object.entries(GROUPS).map(([g, gn]) => h('button', { class: 'chip' + (S.settings.groups[g] ? ' on' : ''), onclick: () => { S.settings.groups[g] = !S.settings.groups[g]; if (!Object.values(S.settings.groups).some(Boolean)) S.settings.groups[g] = true; rerender(); } }, gn))),
       h('div', {}, h('b', {}, 'Contexto')),
-      seg([['no', 'Electro desnudo'], ['si', 'Mostrar edad y sexo']], S.settings.ctx ? 'si' : 'no', (k) => { S.settings.ctx = k === 'si'; rerender(); })),
+      seg([['no', 'Sin contexto'], ['si', 'Mostrar edad y sexo']], S.settings.ctx ? 'si' : 'no', (k) => { S.settings.ctx = k === 'si'; rerender(); })),
     h('div', { class: 'sec-title' }, 'Tu progreso'),
     h('div', { class: 'card row', style: 'justify-content:space-between' },
       h('div', {}, tot ? h('span', {}, h('b', {}, tot + ' respuestas'), ' · ' + Math.round(100 * ok / tot) + ' % de acierto') : h('span', { class: 'muted' }, 'Aún no has respondido ninguno.')),

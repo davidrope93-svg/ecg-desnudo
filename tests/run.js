@@ -233,5 +233,7 @@ t('fase 7: las inversiones se confunden entre sí en las opciones', ['inv_brazos
 const MB16 = new Uint8Array(zlib.gunzipSync(Buffer.from(E('MON_BLOB'), 'base64')));
 t('auditoría: amplitud de cada tira = señal empaquetada (± 0,02 mV)', MM.every((m) => { const x = Array.from(decodeRecord(MB16, m.o, N, 1)[0]).sort((a, b) => a - b); return Math.abs(x[Math.floor(0.99 * N)] - x[Math.floor(0.01 * N)] - m.p2p) <= 0.02; }));
 t('auditoría: criterio de tronco/multivaso de la ESC 2023 (≥ 6 derivaciones)', /≥ 6 derivaciones/.test(CATS.scasest.trampa) && !/≥ 8 derivaciones/.test(CATS.scasest.trampa));
+const TPL = fs.readFileSync(path.join(__dirname, '../src/template.html'), 'utf8');
+t('nombre: ECG en Ruta en el título y la cabecera, y la clave de progreso antigua se conserva', /<title>ECG en Ruta/.test(TPL) && /<h1>ECG en Ruta/.test(TPL) && /const KEY = 'ecgdesnudo\.v1'/.test(fs.readFileSync(path.join(__dirname, '../src/ui.js'), 'utf8')));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

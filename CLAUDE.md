@@ -1,6 +1,8 @@
-# ECG desnudo · instrucciones para continuar el proyecto
+# ECG en Ruta · instrucciones para continuar el proyecto
 
-Entrenador de lectura de ECG para SVA extrahospitalaria. Usuario: médico de SVA. Todo en castellano de España.
+Nombre del producto: **ECG en Ruta** (antes «ECG desnudo», 14/11/2026). El repositorio, la URL de GitHub Pages y la clave de `localStorage` (`ecgdesnudo.v1`) conservan el nombre antiguo a propósito: cambiar la clave borraría el progreso de los usuarios y la URL cambia cuando haya dominio propio. Hoja de ruta de producto: https://claude.ai/artifact/WB6MJuJHz41rD6M1QsAKSn
+
+Entrenador de lectura de ECG para emergencias extrahospitalarias. Usuario: médico de SVA. Todo en castellano de España.
 
 ## Cómo se trabaja
 

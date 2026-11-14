@@ -1,7 +1,7 @@
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const KEY = 'ecgdesnudo.v1';
+const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
   const el = document.createElement(tag);
@@ -334,7 +334,7 @@ function home() {
       h('div', {}, h('b', {}, 'Temas'), h('div', { class: 'small muted' }, n + ' ECG seleccionados')),
       h('div', { class: 'row' }, Object.entries(GROUPS).map(([g, gn]) => h('button', { class: 'chip' + (S.settings.groups[g] ? ' on' : ''), onclick: () => { S.settings.groups[g] = !S.settings.groups[g]; if (!Object.values(S.settings.groups).some(Boolean)) S.settings.groups[g] = true; rerender(); } }, gn))),
       h('div', {}, h('b', {}, 'Contexto')),
-      seg([['no', 'Electro desnudo'], ['si', 'Mostrar edad y sexo']], S.settings.ctx ? 'si' : 'no', (k) => { S.settings.ctx = k === 'si'; rerender(); })),
+      seg([['no', 'Sin contexto'], ['si', 'Mostrar edad y sexo']], S.settings.ctx ? 'si' : 'no', (k) => { S.settings.ctx = k === 'si'; rerender(); })),
     h('div', { class: 'sec-title' }, 'Tu progreso'),
     h('div', { class: 'card row', style: 'justify-content:space-between' },
       h('div', {}, tot ? h('span', {}, h('b', {}, tot + ' respuestas'), ' · ' + Math.round(100 * ok / tot) + ' % de acierto') : h('span', { class: 'muted' }, 'Aún no has respondido ninguno.')),
