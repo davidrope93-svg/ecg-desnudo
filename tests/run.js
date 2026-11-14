@@ -162,5 +162,33 @@ const QD = META.filter((m) => m.src === 'rdvq');
 t('fase 4: QT por fármacos con QTc ≥ 500 ms', QD.length >= 5 && QD.every((m) => m.c === 'qt_largo' && m.qtc >= 500));
 const FP = META.filter((m) => m.c === 'fa_preex');
 t('fase 4: FA preexcitada acepta FA y WPW como parciales', FP.length >= 5 && FP.every((m) => m.sec.includes('fa') && m.sec.includes('wpw')));
+
+// 13. Fase 5: modo imagen (Wikimedia Commons)
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../src/img_data.js'), 'utf8'), ctx, { filename: 'img_data.js' });
+const IM = E('IMG_META'), IC = E('IMG_CATS'), imgOptions = E('imgOptions'), gradeImg = E('gradeImg');
+const IQ = IM.filter((m) => m.q !== false);
+t('fase 5: al menos 15 imágenes de práctica', IQ.length >= 15, IQ.length);
+t('fase 5: ids únicos', new Set(IM.map((m) => m.id)).size === IM.length);
+t('fase 5: cada imagen tiene categoría, archivo, nota y atribución completa', IM.every((m) => IC[m.c] && m.file && m.nota && m.autor && m.title && /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/.test(m.page) && /^https?:\/\//.test(m.licurl)), IM.filter((m) => !IC[m.c] || !m.autor || !m.licurl).map((m) => m.id).join());
+t('fase 5: solo licencias libres que permiten redistribuir (sin NC ni ND)', IM.every((m) => /^(CC BY(-SA)? \d\.\d|CC0|Dominio público)$/.test(m.lic)), IM.map((m) => m.lic).join());
+const imgDir = path.join(__dirname, '../img');
+t('fase 5: el archivo de cada imagen existe, ≤ 1600 px de ancho y < 600 kB', IM.every((m) => fs.existsSync(path.join(imgDir, m.file)) && m.w <= 1600 && fs.statSync(path.join(imgDir, m.file)).size < 600e3));
+t('fase 5: no hay imágenes sueltas sin metadatos', fs.readdirSync(imgDir).every((f) => IM.some((m) => m.file === f)));
+t('fase 5: los pares apuntan a imágenes de apoyo (fuera de la práctica) con etiqueta', IM.filter((m) => m.par).every((m) => { const p = IM.find((x) => x.id === m.par); return p && p.q === false && p.parLabel && p.c === m.c; }));
+t('fase 5: los hallazgos secundarios existen', IM.every((m) => (m.sec || []).concat(m.acc || []).every((c) => IC[c] || CATS[c])));
+t('fase 5: contenido docente completo y distractores válidos', Object.values(IC).every((c) => c.name && c.claves.length >= 3 && c.trampa && c.sva && c.conf.length >= 4 && c.conf.every((x) => IC[x] || CATS[x])));
+t('fase 5: ninguna clave de imagen pisa una categoría de señal', Object.keys(IC).every((c) => !CATS[c]));
+let ioOk = true;
+const ir = rng(7);
+for (const m of IQ) for (let k = 0; k < 20; k++) {
+  const o = imgOptions(m, IC, ir);
+  if (o.length !== 5 || !o.includes(m.c) || new Set(o).size !== 5 || o.some((c) => c !== m.c && ((m.sec || []).includes(c) || (m.acc || []).includes(c)))) ioOk = false;
+}
+t('fase 5: 5 opciones, con la correcta, sin repetir ni ofrecer hallazgos presentes', ioOk);
+const tp = IM.find((m) => (m.sec || []).length);
+t('fase 5: corrección (correcta = ok, hallazgo secundario = parcial, otra = mal)', gradeImg(tp, tp.c) === 'ok' && gradeImg(tp, tp.sec[0]) === 'partial' && gradeImg(tp, IC[tp.c].conf.find((c) => !(tp.sec || []).includes(c))) === 'bad');
+const hp = IM.find((m) => (m.parcial || []).length);
+t('fase 5: lectura parcial defendible (se ofrece y puntúa como parcial)', !hp || (gradeImg(hp, hp.parcial[0]) === 'partial' && imgOptions(hp, IC, rng(3)).includes(hp.parcial[0])));
+t('fase 5: dosis con unidades seguras (mcg, unidades; nunca µg ni UI)', Object.values(IC).every((c) => !/µg|\bUI\b/.test(c.sva + c.trampa)));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

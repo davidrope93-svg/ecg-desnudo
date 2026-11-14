@@ -317,11 +317,12 @@ function home() {
   const rerender = () => { save(); home(); };
   mount(
     h('div', { class: 'hero' }, h('h2', {}, 'Electros reales, sin contexto y con el ruido de la calle.'),
-      h('p', {}, ECG_META.length + ' ECG reales de 12 derivaciones etiquetados por especialistas, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
+      h('p', {}, ECG_META.length + ' ECG reales de 12 derivaciones etiquetados por especialistas, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos, ' + IMG_META.filter((m) => m.q !== false).length + ' ECG clásicos en imagen y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
     h('div', { class: 'grid3' },
       h('button', { class: 'mode primary', onclick: () => practice(false) }, h('b', {}, 'Práctica'), h('span', { class: 'muted' }, 'Un ECG tras otro, con la explicación al responder. Insiste en lo que más fallas.')),
       h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'FV, TV, asistolia y más en tira de monitor real. Ritmo y conducta: ¿descargo o no?')),
       h('button', { class: 'mode', onclick: occPractice }, h('b', {}, 'Oclusión coronaria'), h('span', { class: 'muted' }, 'ECG reales con el balón ocluyendo DA, CD o Cx. ¿Hay oclusión? ¿Qué arteria?')),
+      h('button', { class: 'mode', onclick: imgPractice }, h('b', {}, 'Imagen · casos clásicos'), h('span', { class: 'muted' }, 'ECG reales en papel: hiperpotasemia, Wellens, de Winter, pericarditis, TEP… Lo que no hay en señal.')),
       h('button', { class: 'mode', onclick: exam }, h('b', {}, 'Examen · 10 ECG'), h('span', { class: 'muted' }, 'Sin pistas ni corrección hasta el final. Nota y tiempo.')),
       h('button', { class: 'mode', onclick: atlas }, h('b', {}, 'Atlas'), h('span', { class: 'muted' }, 'Cada diagnóstico con sus criterios, trampas y todos sus ejemplos.'))),
     h('div', { class: 'sec-title' }, 'Ajustes'),
@@ -460,6 +461,10 @@ function atlas() {
       const n = ECG_META.filter((m) => m.c === c).length, s = S.stats[c];
       return h('button', { onclick: () => atlasCat(c, 0) }, h('b', {}, CATS[c].name), h('small', {}, n + ' ejemplos' + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : '')));
     }))]).flat(),
+    h('div', { class: 'sec-title' }, 'Imagen · casos clásicos'), h('div', { class: 'atlas' }, Object.keys(IMG_CATS).map((c) => {
+      const n = IMG_META.filter((m) => m.c === c).length, s = S.stats['i_' + c];
+      return n ? h('button', { onclick: () => atlasImg(c, 0) }, h('b', {}, IMG_CATS[c].name), h('small', {}, n + (n === 1 ? ' imagen' : ' imágenes') + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : ''))) : null;
+    })),
     h('div', { class: 'sec-title' }, 'Oclusión coronaria (STAFF III)'), h('div', { class: 'atlas' }, ['da', 'cd', 'cx'].map((c) => h('button', { onclick: () => occWithLoad(() => occEvolution(OCC_META.find((p) => p.art === c).id, 60)) }, h('b', {}, OCC_CATS[c].name), h('small', {}, 'Basal, minuto 1 y final del inflado')))),
     h('div', { class: 'sec-title' }, 'Monitor'), h('div', { class: 'atlas' }, Object.keys(MON_CATS).map((c) => {
       const n = MON_META.filter((m) => m.c === c).length, s = S.stats['m_' + c];
@@ -500,6 +505,11 @@ function stats() {
       Object.keys(OCC_CATS).map((c) => {
         const s = S.stats['o_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
         return h('div', { class: 'stat' }, h('span', {}, OCC_CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
+      }),
+      h('div', { class: 'sec-title', style: 'margin-top:8px' }, 'Imagen'),
+      Object.keys(IMG_CATS).filter((c) => IMG_META.some((m) => m.c === c)).map((c) => {
+        const s = S.stats['i_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
+        return h('div', { class: 'stat' }, h('span', {}, IMG_CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
       }),
       h('div', { class: 'sec-title', style: 'margin-top:8px' }, 'Monitor'),
       Object.keys(MON_CATS).map((c) => {
@@ -877,6 +887,103 @@ function occEvolution(id, t, back) {
     viewer.set(occExt(p, w), hashSeed(p.id, w.t), 'limpio');
     setKeys((e) => { const i = p.wins.indexOf(w); if (e.key === 'ArrowRight' && i < p.wins.length - 1) occEvolution(id, p.wins[i + 1].t, back); if (e.key === 'ArrowLeft' && i > 0) occEvolution(id, p.wins[i - 1].t, back); });
   });
+}
+
+
+/* ---------- Modo imagen (fase 5): ECG reales en imagen, Wikimedia Commons ---------- */
+const IMG_Q = IMG_META.filter((m) => m.q !== false);
+const imgName = (c) => (IMG_CATS[c] || CATS[c]).name;
+function makeImgViewer() {
+  const img = h('img', { alt: 'ECG de 12 derivaciones', draggable: 'false' });
+  const msg = h('div', { class: 'msg' }, 'Cargando la imagen…');
+  const wrap = h('div', { class: 'imgwrap' }, msg, img);
+  let z = 1;
+  const zoomBtns = [];
+  const setZoom = (nz, fx = 0.5, fy = 0.5) => {
+    const ox = (wrap.scrollLeft + fx * wrap.clientWidth) / Math.max(1, img.clientWidth), oy = (wrap.scrollTop + fy * wrap.clientHeight) / Math.max(1, img.clientHeight);
+    z = Math.max(1, Math.min(4, nz)); img.style.width = (100 * z) + '%'; wrap.classList.toggle('z', z > 1);
+    wrap.scrollLeft = ox * img.clientWidth - fx * wrap.clientWidth; wrap.scrollTop = oy * img.clientHeight - fy * wrap.clientHeight;
+    zoomBtns[1].textContent = '×' + fmt(z, z % 1 ? 1 : 0);
+  };
+  img.addEventListener('click', (e) => { const r = wrap.getBoundingClientRect(); setZoom(z > 1 ? 1 : 2.5, (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); });
+  img.addEventListener('load', () => { msg.classList.add('hidden'); img.classList.remove('hidden'); });
+  img.addEventListener('error', () => { msg.textContent = 'No se pudo cargar la imagen.'; msg.classList.remove('hidden'); img.classList.add('hidden'); });
+  zoomBtns.push(h('button', { class: 'tool', onclick: () => setZoom(z / 1.5) }, '−'), h('button', { class: 'tool', onclick: () => setZoom(1) }, '×1'), h('button', { class: 'tool', onclick: () => setZoom(z * 1.5) }, '+'));
+  const bar = h('div', { class: 'tools' }, h('span', { class: 'small muted' }, 'Zoom'), ...zoomBtns, h('span', { class: 'small muted' }, 'Toca la imagen para ampliar ese punto'));
+  return {
+    el: h('div', {}, bar, wrap),
+    set(file) { msg.textContent = 'Cargando la imagen…'; msg.classList.remove('hidden'); img.classList.add('hidden'); img.src = 'img/' + file; setZoom(1); },
+  };
+}
+function imgSource(m) {
+  return h('div', { class: 'src' }, 'Imagen: ', h('a', { href: m.page, target: '_blank', rel: 'noopener' }, m.title), ' · ', m.autor, ' · ',
+    h('a', { href: m.licurl, target: '_blank', rel: 'noopener' }, m.lic), ' · vía Wikimedia Commons · redimensionada' + (m.origen ? ' · ' + m.origen : ''));
+}
+function imgFeedback(m, grade, ans, viewer) {
+  const C = IMG_CATS[m.c];
+  const V = { ok: 'Correcto', partial: 'Casi: eso también está, pero no es lo principal', bad: 'No es eso', info: 'Imagen' };
+  const pair = m.par ? IMG_META.find((x) => x.id === m.par) : null;
+  let showPair = false;
+  const srcBox = h('div', {}, imgSource(m)), pairNote = h('div', { class: 'small hidden', style: 'margin-top:6px' }, pair ? pair.nota : '');
+  const bPair = pair ? h('button', { class: 'btn ghost', onclick: () => {
+    showPair = !showPair; viewer.set(showPair ? pair.file : m.file);
+    bPair.textContent = showPair ? 'Volver a la imagen principal' : pair.parLabel; pairNote.classList.toggle('hidden', !showPair); srcBox.replaceChildren(imgSource(showPair ? pair : m));
+  } }, pair.parLabel) : null;
+  return h('div', { class: 'fb' },
+    h('div', { class: 'verdict ' + grade }, V[grade]),
+    h('div', { class: 'body' },
+      h('div', {}, h('h3', {}, C.name), ans && ans !== m.c ? h('div', { class: 'small muted' }, 'Tu respuesta: ' + imgName(ans)) : null),
+      h('div', {}, h('h4', {}, 'En esta imagen'), h('div', {}, m.nota),
+        m.ctx ? h('div', { class: 'small', style: 'margin-top:6px' }, h('b', {}, 'Contexto de la fuente: '), m.ctx) : null,
+        m.sec && m.sec.length ? h('div', { class: 'small', style: 'margin-top:4px' }, h('b', {}, 'También presente: '), m.sec.map(imgName).join(', ')) : null,
+        bPair ? h('div', { style: 'margin-top:8px' }, bPair, pairNote) : null),
+      h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
+      h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
+      h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
+      srcBox));
+}
+function imgPractice() {
+  setKeys(null);
+  const viewer = makeImgViewer();
+  const bar = h('span', { class: 'pill' }), ctxBox = h('div'), ansBox = h('div'), fbBox = h('div');
+  mount(caseShell([h('span', { class: 'title' }, 'Imagen · casos clásicos'), bar]), ctxBox, viewer.el, ansBox, fbBox);
+  // primero lo que más se falla: baraja ponderada por acierto previo de cada diagnóstico
+  const w = (m) => { const s = S.stats['i_' + m.c]; return s && s.n ? 1.5 - s.ok / s.n : 1.6; };
+  const deck = IMG_Q.map((m) => [m, -Math.log(R()) / w(m)]).sort((a, b) => a[1] - b[1]).map(([m]) => m);
+  let k = -1;
+  function next() {
+    k = (k + 1) % deck.length;
+    const m = deck[k];
+    bar.textContent = (k + 1) + ' / ' + deck.length;
+    ctxBox.replaceChildren((S.settings.ctx || m.ctxFijo) && m.ctx ? h('div', { class: 'ctx' }, h('b', {}, 'Contexto: '), m.ctx) : '');
+    viewer.set(m.file); fbBox.replaceChildren();
+    const opts = imgOptions(m, IMG_CATS, R);
+    const btns = opts.map((c, i) => h('button', { class: 'opt', 'data-c': c, onclick: () => answer(c) }, (i + 1) + '. ' + imgName(c)));
+    let done = false;
+    function answer(c) {
+      if (done) return; done = true;
+      const g = gradeImg(m, c);
+      const st = S.stats['i_' + m.c] || (S.stats['i_' + m.c] = { n: 0, ok: 0, p: 0 }); st.n++; if (g === 'ok') st.ok++; if (g === 'partial') st.p++; S.total++; save();
+      btns.forEach((b) => { const x = b.dataset.c; b.disabled = true; b.classList.add(x === m.c ? 'ok' : x === c ? (g === 'partial' ? 'partial' : 'bad') : 'dim'); });
+      fbBox.replaceChildren(imgFeedback(m, g, c, viewer), h('div', { class: 'next', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: next }, 'Siguiente ›')));
+      fbBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    ansBox.replaceChildren(h('div', { class: 'answers' }, h('div', { class: 'sec-title', style: 'margin-top:4px' }, '¿Qué ves?'), h('div', { class: 'opts' }, btns)));
+    setKeys((e) => { if (!done && /^[1-5]$/.test(e.key) && btns[+e.key - 1]) btns[+e.key - 1].click(); else if (done && e.key === 'Enter') next(); });
+    window.scrollTo({ top: 0 });
+  }
+  next();
+}
+function atlasImg(c, k) {
+  const list = IMG_META.filter((m) => m.c === c);
+  k = (k + list.length) % list.length;
+  const m = list[k], viewer = makeImgViewer();
+  mount(h('div', { class: 'casebar' }, h('button', { class: 'tool', onclick: atlas }, '‹ Atlas'), h('span', { class: 'title' }, IMG_CATS[c].name),
+    h('span', { class: 'pill' }, (k + 1) + ' / ' + list.length),
+    h('button', { class: 'tool', onclick: () => atlasImg(c, k - 1) }, '‹'), h('button', { class: 'tool', onclick: () => atlasImg(c, k + 1) }, '›')), viewer.el);
+  viewer.set(m.file);
+  app.append(imgFeedback(m, 'info', null, viewer));
+  setKeys((e) => { if (e.key === 'ArrowRight') atlasImg(c, k + 1); if (e.key === 'ArrowLeft') atlasImg(c, k - 1); });
 }
 
 document.getElementById('home-link').addEventListener('click', home);

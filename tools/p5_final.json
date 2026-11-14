@@ -1,0 +1,211 @@
+[
+ {
+  "id": "hiperk_1",
+  "c": "hiperk",
+  "src": "118 (CardioNetworks ECGpedia).jpg",
+  "autor": "Michael Rosengarten (McGill University), vía CardioNetworks/ECGpedia",
+  "origen": "procede de la ECG Library de Dean Jenkins, con permiso",
+  "nota": "Sin P visibles, QRS ancho y abigarrado y T altas y picudas en las precordiales: hiperpotasemia grave, a un paso de la onda sinusoidal. K+ 9,6 mmol/L según la fuente.",
+  "ctx": "Varón de 58 años en hemodiálisis, con debilidad intensa tras un fin de semana fuera de casa."
+ },
+ {
+  "id": "hiperk_2",
+  "c": "hiperk",
+  "src": "HyperK7.6.jpg",
+  "autor": "James Heilman, MD",
+  "nota": "Ritmo sinusal con T picudas y de base estrecha, más evidentes en V2–V4 y en II. K+ 7,6 mmol/L según la fuente: el ECG puede ser así de discreto con cifras ya peligrosas."
+ },
+ {
+  "id": "hiperk_3",
+  "c": "hiperk",
+  "src": "Hyperkalemia ECG.jpg",
+  "autor": "Michael-Joseph F. Agbayani y Eddieson Gonzales (Manila)",
+  "nota": "T altas, picudas y simétricas en V2–V6, II y aVF, con P apenas visibles. Las marcas sobre la tira de ritmo son del autor original.",
+  "ctx": "Paciente con enfermedad renal y K+ 8,2 mmol/L."
+ },
+ {
+  "id": "hipok_1",
+  "c": "hipok",
+  "src": "LowKECG.JPG",
+  "autor": "James Heilman, MD",
+  "nota": "Descenso del ST, T aplanadas y ondas U enormes en V2–V5 que se funden con la T y simulan un QT muy largo. K+ 1,1 mmol/L según la fuente."
+ },
+ {
+  "id": "hipok_2",
+  "c": "hipok",
+  "src": "Hypokalemia (CardioNetworks ECGpedia).jpg",
+  "autor": "CardioNetworks/ECGpedia (Drj)",
+  "nota": "T aplanadas seguidas de ondas U prominentes, mejor visibles en V2–V4."
+ },
+ {
+  "id": "hipotermia_1",
+  "c": "hipotermia",
+  "src": "HypothermiaECG.jpg",
+  "autor": "askdrwiki.com (subida por WikiSysop)",
+  "nota": "Bradicardia con onda J de Osborn: joroba positiva al final del QRS, muy visible en las precordiales.",
+  "sec": [
+   "bradi"
+  ]
+ },
+ {
+  "id": "wellens_1",
+  "c": "wellens",
+  "src": "Wellens1.JPG",
+  "autor": "James Heilman, MD",
+  "nota": "T bifásicas (positiva y después negativa) en V2–V3, sin ondas Q y sin elevación del ST: Wellens tipo A. Línea de base ondulante en los miembros."
+ },
+ {
+  "id": "wellens_2",
+  "c": "wellens",
+  "src": "Wellens' Syndrome.png",
+  "autor": "Jer5150",
+  "nota": "T negativas, profundas y simétricas en V2–V4, con R conservada: Wellens tipo B.",
+  "ctx": "Varón de 69 años sin cardiopatía conocida. En el cateterismo, estenosis crítica (95 %) de la DA proximal."
+ },
+ {
+  "id": "wellens_3",
+  "c": "wellens",
+  "src": "WellensPainfree.JPG",
+  "autor": "James Heilman, MD",
+  "par": "wellens_3d",
+  "nota": "ECG sin dolor: T negativas en V2–V5 con R conservada y sin ondas Q.",
+  "ctx": "Registrado en un momento sin dolor."
+ },
+ {
+  "id": "wellens_3d",
+  "c": "wellens",
+  "src": "WellensPain.JPG",
+  "autor": "James Heilman, MD",
+  "q": false,
+  "parLabel": "Ver el ECG del mismo paciente con dolor",
+  "nota": "Mismo paciente con dolor: las T de las precordiales se pseudonormalizan y el ECG parece casi normal."
+ },
+ {
+  "id": "dewinter_1",
+  "c": "dewinter",
+  "src": "DeWinterECG.jpg",
+  "autor": "EM Vilela, MD",
+  "origen": "figura publicada en StatPearls (NBK557573)",
+  "nota": "Descenso del ST ascendente en las precordiales que continúa en T altas y simétricas, sin elevación del ST en V1–V6."
+ },
+ {
+  "id": "pericarditis_1",
+  "c": "pericarditis",
+  "src": "Acute pericarditis.jpg",
+  "autor": "James Heilman, MD",
+  "nota": "Elevación del ST discreta y cóncava en varios territorios (cara inferior y V3–V6) con descenso en aVR y sin otra imagen especular."
+ },
+ {
+  "id": "pericarditis_2",
+  "c": "pericarditis",
+  "src": "Pericarditis10.JPG",
+  "autor": "James Heilman, MD",
+  "nota": "Elevación del ST cóncava en las precordiales y en la cara inferior, sin territorio coronario definido ni imagen especular."
+ },
+ {
+  "id": "pericarditis_3",
+  "c": "pericarditis",
+  "src": "Pericarditis2016.jpg",
+  "autor": "James Heilman, MD",
+  "nota": "Elevación del ST difusa y cóncava en II, aVF y V2–V6, sin imagen especular salvo en aVR."
+ },
+ {
+  "id": "pericarditis_4",
+  "c": "pericarditis",
+  "src": "PericarditisECG.JPG",
+  "autor": "James Heilman, MD",
+  "nota": "Elevación del ST en múltiples derivaciones con descenso especular solo en aVR, tal y como señala la fuente."
+ },
+ {
+  "id": "tep_1",
+  "c": "tep",
+  "src": "E000584 (CardioNetworks ECGpedia).jpg",
+  "autor": "Michael Rosengarten (McGill University), vía CardioNetworks/ECGpedia",
+  "nota": "Taquicardia sinusal con bloqueo de rama derecha secundario a un TEP masivo, según la fuente.",
+  "sec": [
+   "brd",
+   "taqui"
+  ]
+ },
+ {
+  "id": "taponamiento_1",
+  "c": "taponamiento",
+  "src": "Electrical Alternans.JPG",
+  "autor": "James Heilman, MD",
+  "nota": "Taquicardia sinusal con bajo voltaje y alternancia eléctrica: la amplitud del QRS cambia latido a latido, mejor visible en las precordiales y en la tira de II.",
+  "ctx": "Derrame pericárdico grande.",
+  "sec": [
+   "taqui"
+  ]
+ },
+ {
+  "id": "taponamiento_2",
+  "c": "taponamiento",
+  "src": "PulsusAlternans (CardioNetworks ECHOpedia).jpg",
+  "autor": "J.S.S.G. de Jong (AMC, Ámsterdam), vía CardioNetworks/ECHOpedia",
+  "nota": "Taquicardia sinusal con QRS pequeños y alternancia eléctrica.",
+  "ctx": "Varón de 40 años con mieloma múltiple y taponamiento cardiaco.",
+  "sec": [
+   "taqui"
+  ]
+ },
+ {
+  "id": "sgarbossa_1",
+  "c": "sgarbossa",
+  "src": "E319 (CardioNetworks ECGpedia).jpg",
+  "autor": "Michael Rosengarten (McGill University), vía CardioNetworks/ECGpedia",
+  "origen": "procede de la ECG Library de Dean Jenkins, con permiso; copia descargada de ECGpedia",
+  "nota": "Bloqueo de rama izquierda con cambios del ST que siguen la dirección del QRS (concordantes), signo de IAM agudo según la fuente.",
+  "ctx": "Varón de 79 años con 5 horas de dolor torácico.",
+  "sec": [
+   "bri"
+  ]
+ },
+ {
+  "id": "iam_post_1",
+  "c": "iam_post",
+  "src": "E310 (CardioNetworks ECGpedia).jpg",
+  "autor": "Michael Rosengarten (McGill University), vía CardioNetworks/ECGpedia",
+  "origen": "procede de la ECG Library de Dean Jenkins, con permiso; copia descargada de ECGpedia",
+  "nota": "Descenso del ST horizontal en V1–V3 con T positivas y R altas en V2–V3: IAM posterior agudo, según la fuente.",
+  "ctx": "Mujer de 60 años con 3 horas de dolor torácico."
+ },
+ {
+  "id": "dextrocardia_1",
+  "c": "dextrocardia",
+  "src": "De-Dextrocardia (CardioNetworks ECGpedia).jpg",
+  "autor": "R. Adams (AMC, Ámsterdam), vía CardioNetworks/ECGpedia",
+  "origen": "copia descargada de ECGpedia",
+  "nota": "QRS negativo en I, aVR positiva y QRS que se hacen cada vez más pequeños de V1 a V6. El eje del QRS del aparato es 212°."
+ },
+ {
+  "id": "hipoca_1",
+  "c": "hipoca",
+  "src": "ECG E000800.jpg",
+  "autor": "CardioNetworks/ECGpedia (Drj)",
+  "origen": "copia descargada de ECGpedia",
+  "nota": "ST largo y rectilíneo seguido de una T de forma normal (mírala en V2–V3): el QT se alarga a expensas del ST."
+ },
+ {
+  "id": "hsa_1",
+  "c": "hsa",
+  "src": "CNSinjury.JPG",
+  "autor": "James Heilman, MD",
+  "par": "hsa_1m",
+  "nota": "Taquicardia sinusal con elevación del ST en I, aVL y V2–V6 que imita un SCACEST anterolateral, en una hemorragia subaracnoidea según la fuente.",
+  "ctx": "Mujer con una lesión neurológica aguda.",
+  "ctxFijo": true,
+  "parcial": [
+   "scacest_ant"
+  ]
+ },
+ {
+  "id": "hsa_1m",
+  "c": "hsa",
+  "src": "STHeadinjury.JPG",
+  "autor": "James Heilman, MD",
+  "q": false,
+  "parLabel": "Ver el mismo ECG con las elevaciones marcadas por el autor",
+  "nota": "El mismo ECG con las elevaciones del ST rodeadas por el autor (I, aVL y V2–V6)."
+ }
+]

@@ -306,4 +306,21 @@ function applyXf(r, xf) {
   return [nI, nII, ...r.slice(2)];
 }
 
-if (typeof module !== 'undefined') module.exports = { applyXf, monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };
+
+/* ---------- Modo imagen (fase 5) ---------- */
+function imgOptions(meta, icats, r) {
+  // correcta + 4 confusiones típicas; nunca un hallazgo que también esté presente en la imagen.
+  // «parcial»: lectura defendible del trazado que no es el diagnóstico (p. ej., SCACEST en una HSA): se ofrece primero y puntúa como parcial
+  const banned = new Set([meta.c, ...(meta.sec || []), ...(meta.acc || [])]);
+  const picked = [...(meta.parcial || []), ...shuffle(icats[meta.c].conf.filter((x) => !banned.has(x) && !(meta.parcial || []).includes(x)), r)].slice(0, 4);
+  const rest = shuffle(Object.keys(icats).filter((x) => !banned.has(x) && !picked.includes(x)), r);
+  while (picked.length < 4 && rest.length) picked.push(rest.shift());
+  return shuffle([meta.c, ...picked], r);
+}
+function gradeImg(meta, ans) {
+  if (ans === meta.c || (meta.acc || []).includes(ans)) return 'ok';
+  if ((meta.sec || []).includes(ans) || (meta.parcial || []).includes(ans)) return 'partial';
+  return 'bad';
+}
+
+if (typeof module !== 'undefined') module.exports = { imgOptions, gradeImg, applyXf, monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };

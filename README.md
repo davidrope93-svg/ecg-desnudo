@@ -8,6 +8,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 ## Qué hay
 
+- **Imagen · casos clásicos (fase 5)**: 21 ECG reales en imagen de Wikimedia Commons (CC BY y CC BY-SA) para lo que no existe en señal: hiperpotasemia, hipopotasemia, hipocalcemia, hipotermia, Wellens (con el ECG del mismo paciente con dolor), de Winter, pericarditis, TEP, taponamiento con alternancia eléctrica, IAM con BRI (Sgarbossa), IAM posterior y dextrocardia. Zoom por toque, autor y licencia en cada imagen.
 - **Fase 4**: Brugada tipo 1 espontáneo (Brugada-HUCA), QT largo por quinidina y dofetilida (ECGRDVQ), FA preexcitada (INCART) e inversión de electrodos de los brazos (transformación exacta de ECG normales).
 - **Oclusión coronaria (fase 3)**: 78 pacientes de STAFF III con el balón ocluyendo DA, CD o Cx: ECG basal, al minuto 1 y al final del inflado. Pregunta de oclusión y arteria, comparación con el basal y vista de evolución con el cambio del ST por derivación.
 - **Bloqueos y taquicardias (fase 2)**: Mobitz I, Mobitz II/2:1/avanzado, BAV completo, ritmo de la unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman-Shaoxing/Ningbo y SPH), revisados uno a uno. Banco total: 224 ECG de 12 derivaciones y 102 tiras de monitor.
@@ -24,13 +25,14 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 | Archivo | Contenido |
 |---|---|
+| `src/img_data.js`, `img/` | Fase 5: metadatos (autor, licencia, nota) e imágenes redimensionadas. Lo genera `tools/p5_pack.py` desde `tools/p5_final.json`. |
 | `src/data.js` | Banco comprimido (delta + varint + gzip) y metadatos. Lo genera `tools/pack.py`. |
 | `src/content.js` | Criterios, trampas, actuación y confusiones de cada diagnóstico; códigos SCP en castellano. |
 | `src/engine.js` | Decodificación, derivaciones, artefacto, filtros, opciones y mazo. Sin DOM. |
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 167 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 180 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```
@@ -39,6 +41,6 @@ python3 build.py && node tests/run.js
 
 ## Fuentes y licencia de los datos
 
-Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia.
+Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia. Las imágenes de `img/` son de Wikimedia Commons; cada una conserva su licencia (CC BY o CC BY-SA) y su autor, que se muestran en la app y en `src/img_data.js`; están redimensionadas.
 
 Wagner P, et al. PTB-XL, a large publicly available electrocardiography dataset (v1.0.3). PhysioNet, 2022. Strodthoff N, et al. PTB-XL+ (v1.0.1). PhysioNet, 2023. Ambos CC BY 4.0. El artefacto es simulado. Herramienta docente.

@@ -1,7 +1,7 @@
 """Genera index.html (un único archivo, sin dependencias) a partir de src/. Uso: python3 build.py"""
 src = lambda f: open('src/' + f, encoding='utf-8').read()
 t = src('template.html')
-for k, f in [('DATA', 'data.js'), ('MONDATA', 'monitor_data.js'), ('CONTENT', 'content.js'), ('ENGINE', 'engine.js'), ('UI', 'ui.js')]:
+for k, f in [('DATA', 'data.js'), ('MONDATA', 'monitor_data.js'), ('IMGDATA', 'img_data.js'), ('CONTENT', 'content.js'), ('ENGINE', 'engine.js'), ('UI', 'ui.js')]:
     t = t.replace('/*%s*/' % k, src(f), 1)
 head, body = t.split('<!--BODY-->', 1)
 page = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'

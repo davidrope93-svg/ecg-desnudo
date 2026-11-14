@@ -343,3 +343,122 @@ const OCC_CATS = {
   },
 };
 if (typeof module !== 'undefined') module.exports.OCC = { OCC_CATS };
+
+/* ---------- Modo imagen (fase 5) ----------
+   ECG reales fotografiados o escaneados, de Wikimedia Commons (CC BY / CC BY-SA), para entidades sin banco de señal.
+   conf puede incluir categorías de CATS como distractores. Criterios: ERC 2025 (circunstancias especiales y SVA), ESC 2023, 4.ª definición universal. */
+const IMG_CATS = {
+  hiperk: {
+    name: 'Hiperpotasemia',
+    claves: ['T altas y picudas, de base estrecha, más altas que la R en más de una derivación', 'Después: PR largo, P aplanada o ausente y QRS ancho (> 120 ms)', 'Al final: onda sinusoidal, bradicardia extrema, TV o parada'],
+    trampa: 'El ECG puede ser normal con un potasio muy alto y no se correlaciona bien con la cifra. Un QRS ancho y lento en un paciente renal, con debilidad o parálisis flácida, es hiperpotasemia hasta demostrar lo contrario.',
+    sva: 'Grave con cambios en el ECG: cloruro cálcico 10 % 10 mL IV (registra el ECG antes y después), insulina rápida 10 unidades con glucosa 25 g IV y salbutamol nebulizado 10–20 mg. En parada: cloruro cálcico 10 % 10 mL y bicarbonato sódico 50 mmol IV, por vías separadas o lavando entre ambos (ERC 2025).',
+    conf: ['bri', 'tv', 'scacest_ant', 'hipok', 'hipoca'],
+  },
+  hipok: {
+    name: 'Hipopotasemia',
+    claves: ['Descenso del ST con T aplanada o negativa', 'Onda U prominente, mejor visible en V2–V3, que puede superar a la T', 'QT aparentemente largo por la fusión de T y U; PR algo alargado'],
+    trampa: 'La fusión T-U se mide como un QT largo: el riesgo es la torsade de pointes y la FV, sobre todo con digoxina o fármacos que alargan el QT. Busca la hipomagnesemia asociada.',
+    sva: 'Repón potasio y corrige el magnesio a la vez. En parada por hipopotasemia: cloruro potásico 20 mmol IV en 2–3 min, seguido de 10 mmol en 2 min, y ajustar según el K+ (ERC 2025).',
+    conf: ['qt_largo', 'scasest', 'digital', 'hiperk', 'hipoca'],
+  },
+  hipoca: {
+    name: 'Hipocalcemia',
+    claves: ['QT largo a expensas de un ST largo y rectilíneo', 'T de forma normal y sin onda U (a diferencia de la hipopotasemia)', 'Puede haber T negativas y bloqueo AV'],
+    trampa: 'Piensa en ella en la transfusión masiva, la insuficiencia renal, la pancreatitis, la rabdomiólisis y la intoxicación por antagonistas del calcio.',
+    sva: 'Gluconato cálcico 10 % 10–20 mL IV en 5–10 min y, después, perfusión según el calcio (ERC 2025).',
+    conf: ['qt_largo', 'hipok', 'hiperk', 'normal', 'digital'],
+  },
+  hipotermia: {
+    name: 'Hipotermia',
+    claves: ['Onda J de Osborn: joroba positiva al final del QRS, mayor cuanto más baja la temperatura', 'Bradicardia sinusal con PR, QRS y QT largos', 'Artefacto por temblor; FA lenta y, al enfriarse más, FV o asistolia'],
+    trampa: 'La onda J puede simular una elevación del ST o un Brugada. Una FC < 45 lpm en un hipotérmico es un criterio de alto riesgo de parada (ERC 2025).',
+    sva: 'En parada por debajo de 30 °C: máximo tres descargas y no más hasta superar 30 °C; una sola dosis de adrenalina 1 mg salvo ECPR inminente; entre 30 y 35 °C, adrenalina cada 6–10 min. Con riesgo de parada o en parada, traslado directo a un centro con ECMO (ERC 2025).',
+    conf: ['bradi', 'brugada', 'scacest_inf', 'hiperk', 'pericarditis'],
+  },
+  wellens: {
+    name: 'Síndrome de Wellens',
+    claves: ['T bifásicas (tipo A) o negativas, profundas y simétricas (tipo B) en V2–V3, a veces hasta V6', 'Sin ondas Q, R conservada y ST isoeléctrico o casi', 'Se registra en un periodo sin dolor, tras un episodio de angina'],
+    trampa: 'Con dolor, las T se pseudonormalizan y el ECG puede parecer normal. Indica una estenosis crítica de la DA proximal con alto riesgo de oclusión: nunca prueba de esfuerzo.',
+    sva: 'SCA de alto riesgo: traslado a un centro con hemodinámica. Si vuelve el dolor, repite el ECG: puede evolucionar a una oclusión de la DA (de Zwaan y Wellens, Am Heart J 1982).',
+    conf: ['scasest', 'iam_antiguo', 'tep', 'hvi', 'dewinter'],
+  },
+  dewinter: {
+    name: 'Patrón de de Winter',
+    claves: ['Descenso del ST ascendente de 1–3 mm en el punto J en V1–V6', 'Continúa en T altas, positivas y simétricas', 'Suele haber elevación del ST de 1–2 mm en aVR'],
+    trampa: 'No hay elevación del ST en precordiales, por eso se etiqueta de SCASEST. Es una oclusión aguda de la DA proximal y equivale a un SCACEST.',
+    sva: 'Activar Codican como un SCACEST (de Winter et al., N Engl J Med 2008).',
+    conf: ['scasest', 'hiperk', 'scacest_ant', 'wellens', 'hvi'],
+  },
+  pericarditis: {
+    name: 'Pericarditis aguda',
+    claves: ['Elevación del ST difusa y cóncava, en derivaciones de varios territorios', 'Descenso del PR; en aVR, PR elevado y ST descendido', 'Sin imagen especular (salvo en aVR y V1) y sin ondas Q'],
+    trampa: 'El SCACEST tiene territorio, a menudo convexidad e imagen especular. Un descenso del ST en III o aVL frente a una elevación en la cara opuesta no es pericarditis.',
+    sva: 'Dolor pleurítico que mejora al inclinarse hacia delante, a veces con roce. Descarta derrame y taponamiento con ecografía. Si dudas con un SCACEST, transmite el ECG a hemodinámica antes de decidir.',
+    conf: ['scacest_inf', 'scacest_ant', 'hsa', 'hipotermia', 'brugada'],
+  },
+  tep: {
+    name: 'Tromboembolismo pulmonar',
+    claves: ['Taquicardia sinusal: el hallazgo más frecuente', 'Sobrecarga del VD: T negativas en V1–V4, qR en V1, BRD completo o incompleto', 'S1Q3T3 (S en I, Q y T negativa en III): sugestivo, pero poco sensible'],
+    trampa: 'Las T negativas en V1–V4 de la sobrecarga del VD se confunden con isquemia anterior o con un Wellens. Un ECG normal no descarta un TEP.',
+    sva: 'Disnea súbita sin cardiopatía ni neumopatía conocida: piensa en TEP y busca sobrecarga del VD. En parada por TEP sospechado, fibrinolisis y RCP 60–90 min tras administrarla (ERC 2025).',
+    conf: ['scasest', 'brd', 'taqui', 'wellens', 'iam_antiguo'],
+  },
+  taponamiento: {
+    name: 'Derrame pericárdico con taponamiento',
+    claves: ['Taquicardia sinusal', 'Bajo voltaje del QRS', 'Alternancia eléctrica: la amplitud del QRS cambia latido a latido porque el corazón oscila dentro del derrame'],
+    trampa: 'La alternancia eléctrica es específica pero poco sensible: su ausencia no descarta taponamiento. Una TSV muy rápida también puede alternar.',
+    sva: 'Hipotensión, ingurgitación yugular y taquicardia con bajo voltaje: ecografía a pie de cama. El taponamiento es una causa reversible de parada (4H y 4T): pericardiocentesis si hay compromiso.',
+    conf: ['taqui', 'pericarditis', 'tep', 'tsv', 'normal'],
+  },
+  mp_fallo: {
+    name: 'Fallo de captura del marcapasos',
+    claves: ['Espícula de marcapasos que no va seguida de QRS', 'Pausas o bradicardia aunque el marcapasos emite', 'Distínguelo del fallo de sensado: espículas que caen sobre QRS o T propios sin respetar el ritmo del paciente'],
+    trampa: 'Si en la pausa no hay espícula, no es fallo de captura sino inhibición por sobresensado o fallo de salida. El imán pasa el marcapasos a modo asíncrono: corrige la inhibición, no el fallo de captura.',
+    sva: 'Bradicardia con signos adversos: algoritmo de bradicardia (atropina 500 mcg IV, isoprenalina o adrenalina, marcapasos transcutáneo; ERC 2025). Causas: desplazamiento del cable, umbral alto, hiperpotasemia, isquemia, fármacos.',
+    conf: ['marcapasos', 'bav3', 'bradi', 'bav2alto', 'ev'],
+  },
+  dextrocardia: {
+    name: 'Dextrocardia',
+    claves: ['P, QRS y T negativos en I; aVR positiva', 'Progresión inversa de la R: los QRS se hacen más pequeños de V1 a V6', 'Con precordiales en el hemitórax derecho, el trazado se normaliza'],
+    trampa: 'La inversión de los electrodos de los brazos también da I negativa y aVR positiva, pero las precordiales son normales. Mira V5–V6 antes de decidir.',
+    sva: 'Para un ECG interpretable, intercambia los electrodos de los brazos y coloca las precordiales en espejo en el hemitórax derecho, sobre todo si hay dolor torácico.',
+    conf: ['inv_brazos', 'iam_antiguo', 'hvi', 'brd', 'normal'],
+  },
+  sgarbossa: {
+    name: 'IAM con BRI (criterios de Sgarbossa)',
+    claves: ['BRI con elevación del ST concordante (en la misma dirección que el QRS) ≥ 1 mm', 'Descenso concordante del ST ≥ 1 mm en V1–V3', 'Discordancia desproporcionada: ST/S ≥ 25 % (Smith); ≥ 5 mm en el criterio original'],
+    trampa: 'En el BRI lo esperable es un ST discordante. Lo que hay que buscar es concordancia o una discordancia desproporcionada, y un BRI sin estos criterios no descarta la oclusión.',
+    sva: 'BRI, conocido o nuevo, con clínica de isquemia en curso: manéjalo como un SCACEST y activa el Codican (ESC 2023).',
+    conf: ['bri', 'scacest_ant', 'hvi', 'marcapasos', 'hiperk'],
+  },
+  iam_vd: {
+    name: 'IAM de ventrículo derecho',
+    claves: ['IAM inferior con elevación del ST mayor en III que en II', 'Elevación del ST en V4R (y V3R) ≥ 0,5 mm; ≥ 1 mm en varones < 30 años', 'Puede elevar el ST en V1'],
+    trampa: 'Sin V4R pasa desapercibido. Hipotensión con pulmones limpios e ingurgitación yugular en un IAM inferior: piensa en el VD antes de dar nitratos.',
+    sva: 'Evita nitratos y diuréticos; si hay hipotensión, carga de volumen prudente. Bradicardia y BAV frecuentes. Codican.',
+    conf: ['scacest_inf', 'scacest_ant', 'brd', 'iam_post', 'pericarditis'],
+  },
+  iam_post: {
+    name: 'IAM posterior',
+    claves: ['Descenso del ST máximo en V1–V3, horizontal, con T positiva', 'R alta en V1–V2 cuando evoluciona: la Q posterior vista en espejo', 'Elevación del ST ≥ 0,5 mm en V7–V9 (≥ 1 mm en varones < 40 años)'],
+    trampa: 'Se etiqueta de SCASEST anterior. Míralo en espejo: el descenso de V1–V3 es una elevación vista desde delante.',
+    sva: 'Registra V7–V9: si confirman la elevación, es un SCACEST y se activa el Codican (ESC 2023). Suele acompañar a un IAM inferior o lateral.',
+    conf: ['scasest', 'brd', 'wpw', 'hvi', 'iam_vd'],
+  },
+  hsa: {
+    name: 'Lesión cerebral aguda (hemorragia subaracnoidea)',
+    claves: ['T negativas gigantes y anchas, con QT muy largo', 'Elevación o descenso del ST que puede simular un SCA', 'Bradicardia o arritmias por la descarga autonómica'],
+    trampa: 'El ECG puede ser indistinguible de un SCACEST. Cefalea brusca, bajo nivel de conciencia o focalidad mandan: antes de antiagregar, piensa en la cabeza.',
+    sva: 'Si domina el cuadro neurológico, no antiagregues ni anticoagules sin descartar la hemorragia: el destino es un centro con neuroimagen y neurocirugía.',
+    conf: ['scacest_ant', 'wellens', 'qt_largo', 'pericarditis', 'scasest'],
+  },
+  tdp: {
+    name: 'Torsade de pointes',
+    claves: ['TV polimorfa: los QRS cambian de amplitud y parecen girar alrededor de la línea de base', 'Aparece sobre un QT largo, a menudo tras una secuencia corto-largo-corto', 'Suele autolimitarse, pero puede degenerar en FV'],
+    trampa: 'Una TV polimorfa con QT normal sugiere isquemia, no torsade, y el magnesio no basta.',
+    sva: 'Sin pulso: desfibrilación. Con pulso: sulfato de magnesio 2 g (8 mmol) IV en 10 min, repetible una vez; retira los fármacos que alargan el QT y corrige el potasio y el magnesio (ERC 2025).',
+    conf: ['tv', 'fa_preex', 'qt_largo', 'flutter', 'ev'],
+  },
+};
+if (typeof module !== 'undefined') module.exports.IMG = { IMG_CATS };
