@@ -86,7 +86,8 @@ Leyenda: ✅ ya en la v0.1 · 🟢 señal real con etiqueta fiable · 🟡 seña
 | Dextrocardia | ✅ 🖼️ Commons; 🟡 MIMIC | 1 · 323 |
 | Hiperpotasemia, hipopotasemia, hipocalcemia | ✅ 🖼️ Commons (con la cifra de la fuente). Ninguna base abierta vincula señal y electrolitos | 3 · 2 · 1 |
 | Hipotermia (J de Osborn), TEP, derrame con alternancia | ✅ 🖼️ Commons | 1 · 1 · 2 |
-| Hemorragia subaracnoidea, tricíclicos, Takotsubo | 🖼️ Commons (HSA pendiente de descarga); LITFL | — |
+| Hemorragia subaracnoidea | ✅ 🖼️ Commons | 1 |
+| Tricíclicos, Takotsubo | 🖼️ LITFL | — |
 
 ### Trampas técnicas
 
@@ -105,5 +106,5 @@ Hiperpotasemia, hipotermia, intoxicación por tricíclicos, Wellens, de Winter y
 2. ✅ **Bloqueos y taquicardias** (hecho): Mobitz I, Mobitz II/2:1/avanzado, BAV completo, unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman/Ningbo y SPH), revisados uno a uno. Pendiente: taquicardia auricular. Ojo: en SPH, el código 85 «2:1» acompaña al flutter (conducción 2:1), no es bloqueo AV.
 3. ✅ **OMI** (hecho): STAFF III por arteria, con basal, minuto 1 y final del inflado, incluida la circunfleja.
 4. ✅ **Brugada**, QT por fármacos, FA preexcitada e inversión de electrodos (hecho).
-5. ✅ **Modo imagen** (hecho): 21 ECG de Wikimedia Commons para 12 entidades sin señal. Pendiente: HSA, torsade, IAM de VD, fallo de captura.
+5. ✅ **Modo imagen** (hecho): 22 ECG de Wikimedia Commons para 13 entidades sin señal. Pendiente: torsade, IAM de VD, fallo de captura.
 6. **Banco propio** de ECG anonimizados del usuario.
