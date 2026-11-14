@@ -32,7 +32,14 @@ LP = ss.butter(4, 40, 'lowpass', fs=250, output='sos')
 for x in json.load(open('/home/claude/ecg-desnudo/tools/p2_monitor_riva.json')):
     y = ss.sosfiltfilt(LP, p2load(x['src'], x['id'])[:, LN.index('II')])
     sel.append(dict(cat='riva', db='cn', rec=x['id'], t0=0, sig=y.astype(np.float32), p2p=round(float(np.percentile(y, 99) - np.percentile(y, 1)), 2), lead='II'))
-CTX = {'fv': ['parada'], 'flv': ['parada'], 'tv': ['parada', 'inestable'], 'asis': ['parada'], 'riva': ['pulso'], 'bigem': ['pulso'], 'sinusal': ['parada', 'pulso']}
+# Fase 6 · periparada (revisadas en hojas de tools/p6_sheet.py): MIT-BIH, derivación II de Chapman/Ningbo, SPH y PTB-XL
+c6 = {(o['db'], o['rec'], o['t0']): o for o in pickle.load(open('/home/claude/data/mon6/cands.pkl', 'rb'))}
+for e in json.load(open('/home/claude/ecg-desnudo/tools/p6_final.json')):
+    o = dict(c6[(e['db'], e['rec'], e['t0'])]); o['cat'] = e['cat']
+    if 'qrs' in e: o['qrs'] = e['qrs']
+    sel.append(o)
+CTX = {'tsv': ['inestable', 'pulso'], 'fa': ['inestable', 'pulso'], 'flutter': ['inestable', 'pulso'], 'bav2': ['inestable', 'parada'], 'bav3': ['inestable', 'parada'], 'bradi': ['inestable'],
+       'fv': ['parada'], 'flv': ['parada'], 'tv': ['parada', 'inestable'], 'asis': ['parada'], 'riva': ['pulso'], 'bigem': ['pulso'], 'sinusal': ['parada', 'pulso']}
 blob = bytearray(); meta = []
 def varint(vals):
     out = bytearray()
@@ -47,9 +54,11 @@ for i, o in enumerate(sel):
     off = len(blob); blob += varint([int(v) for v in d])
     meta.append(dict(id=i + 1, c=o['cat'], o=off, db=o['db'], rec=o['rec'], t0=o['t0'], lead=o['lead'], p2p=o['p2p'],
                      acc=(['flv'] if o['db'] == 'cudb' else []), ctx=CTX[o['cat']]))
+    if o.get('qrs'): meta[-1]['qrs'] = o['qrs']
+    if o.get('qrs') == 'ancho': meta[-1]['k'] = {'inestable': 'marcapasos'}
 gz = gzip.compress(bytes(blob), 9); b64 = base64.b64encode(gz).decode()
 from collections import Counter
 print(Counter(m['c'] for m in meta), 'b64', len(b64))
 open('/home/claude/ecg-desnudo/src/monitor_data.js', 'w').write(
-    '// Generado por tools/monitor_pack.py: tiras de vfdb, cudb y MIT-BIH (ODC-By) y RIVA de Chapman/Ningbo (CC BY 4.0), 250 Hz, filtradas 0,5–40 Hz. No editar a mano.\n'
+    '// Generado por tools/monitor_pack.py: tiras de vfdb, cudb y MIT-BIH (ODC-By), derivación II de Chapman/Ningbo y PTB-XL (CC BY 4.0) y SPH (CC0), 250 Hz, filtradas 0,5–40 Hz. No editar a mano.\n'
     'const MON_META = %s;\nconst MON_BLOB = "%s";\n' % (json.dumps(meta, ensure_ascii=False, separators=(',', ':')), b64))

@@ -1,0 +1,343 @@
+[
+{
+"cat": "fa",
+"db": "mitdb",
+"rec": "201",
+"t0": 1611.5
+},
+{
+"cat": "fa",
+"db": "mitdb",
+"rec": "202",
+"t0": 1142.6
+},
+{
+"cat": "fa",
+"db": "mitdb",
+"rec": "202",
+"t0": 1266.3
+},
+{
+"cat": "fa",
+"db": "mitdb",
+"rec": "202",
+"t0": 1236.3
+},
+{
+"cat": "fa",
+"db": "mitdb",
+"rec": "202",
+"t0": 1281.3
+},
+{
+"cat": "fa",
+"db": "ptbxl",
+"rec": "12945",
+"t0": 0
+},
+{
+"cat": "fa",
+"db": "ptbxl",
+"rec": "4117",
+"t0": 0
+},
+{
+"cat": "fa",
+"db": "ptbxl",
+"rec": "3097",
+"t0": 0
+},
+{
+"cat": "fa",
+"db": "ptbxl",
+"rec": "8468",
+"t0": 0
+},
+{
+"cat": "flutter",
+"db": "mitdb",
+"rec": "222",
+"t0": 574.0
+},
+{
+"cat": "flutter",
+"db": "mitdb",
+"rec": "222",
+"t0": 727.9
+},
+{
+"cat": "flutter",
+"db": "mitdb",
+"rec": "222",
+"t0": 722.9
+},
+{
+"cat": "flutter",
+"db": "mitdb",
+"rec": "222",
+"t0": 997.5
+},
+{
+"cat": "flutter",
+"db": "ptbxl",
+"rec": "23",
+"t0": 0
+},
+{
+"cat": "flutter",
+"db": "ptbxl",
+"rec": "6179",
+"t0": 0
+},
+{
+"cat": "flutter",
+"db": "ptbxl",
+"rec": "7159",
+"t0": 0
+},
+{
+"cat": "flutter",
+"db": "ptbxl",
+"rec": "2739",
+"t0": 0
+},
+{
+"cat": "flutter",
+"db": "ptbxl",
+"rec": "12986",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "mitdb",
+"rec": "209",
+"t0": 560.7
+},
+{
+"cat": "tsv",
+"db": "mitdb",
+"rec": "234",
+"t0": 860.6
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS09925",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10456",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10382",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10213",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10554",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10406",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10361",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10481",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10493",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10332",
+"t0": 0
+},
+{
+"cat": "tsv",
+"db": "cn",
+"rec": "JS10306",
+"t0": 0
+},
+{
+"cat": "bav2",
+"db": "mitdb",
+"rec": "231",
+"t0": 112.6,
+"qrs": "ancho"
+},
+{
+"cat": "bav2",
+"db": "mitdb",
+"rec": "231",
+"t0": 1019.8,
+"qrs": "ancho"
+},
+{
+"cat": "bav2",
+"db": "mitdb",
+"rec": "231",
+"t0": 1225.2,
+"qrs": "ancho"
+},
+{
+"cat": "bav2",
+"db": "mitdb",
+"rec": "231",
+"t0": 1314.5,
+"qrs": "ancho"
+},
+{
+"cat": "bav2",
+"db": "sph",
+"rec": "A11050",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav2",
+"db": "sph",
+"rec": "A20016",
+"t0": 0,
+"qrs": "ancho"
+},
+{
+"cat": "bav2",
+"db": "cn",
+"rec": "JS12440",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav2",
+"db": "cn",
+"rec": "JS06113",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A00615",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A01082",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A02151",
+"t0": 0,
+"qrs": "ancho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A05820",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A06781",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A10013",
+"t0": 0,
+"qrs": "ancho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A11318",
+"t0": 0,
+"qrs": "ancho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A13526",
+"t0": 0,
+"qrs": "ancho"
+},
+{
+"cat": "bav3",
+"db": "sph",
+"rec": "A15736",
+"t0": 0,
+"qrs": "estrecho"
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 1490.2
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 630.2
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 1010.2
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 1175.2
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 985.2
+},
+{
+"cat": "bradi",
+"db": "mitdb",
+"rec": "232",
+"t0": 1205.2
+}
+]

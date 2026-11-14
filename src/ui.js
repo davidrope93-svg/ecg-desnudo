@@ -320,7 +320,7 @@ function home() {
       h('p', {}, ECG_META.length + ' ECG reales de 12 derivaciones etiquetados por especialistas, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos, ' + IMG_META.filter((m) => m.q !== false).length + ' ECG clásicos en imagen y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
     h('div', { class: 'grid3' },
       h('button', { class: 'mode primary', onclick: () => practice(false) }, h('b', {}, 'Práctica'), h('span', { class: 'muted' }, 'Un ECG tras otro, con la explicación al responder. Insiste en lo que más fallas.')),
-      h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'FV, TV, asistolia y más en tira de monitor real. Ritmo y conducta: ¿descargo o no?')),
+      h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'Parada y periparada en tira de monitor real: FV, TV, TSV, FA rápida, bloqueos y más. Ritmo y conducta según el ERC 2025.')),
       h('button', { class: 'mode', onclick: occPractice }, h('b', {}, 'Oclusión coronaria'), h('span', { class: 'muted' }, 'ECG reales con el balón ocluyendo DA, CD o Cx. ¿Hay oclusión? ¿Qué arteria?')),
       h('button', { class: 'mode', onclick: imgPractice }, h('b', {}, 'Imagen · casos clásicos'), h('span', { class: 'muted' }, 'ECG reales en papel: hiperpotasemia, Wellens, de Winter, pericarditis, TEP… Lo que no hay en señal.')),
       h('button', { class: 'mode', onclick: exam }, h('b', {}, 'Examen · 10 ECG'), h('span', { class: 'muted' }, 'Sin pistas ni corrección hasta el final. Nota y tiempo.')),
@@ -524,7 +524,7 @@ function stats() {
 let MON_BYTES = null;
 const MCACHE = new Map();
 const monSig = (i) => { if (!MCACHE.has(i)) MCACHE.set(i, decodeRecord(MON_BYTES, MON_META[i].o, ECG_N, 1)[0]); return MCACHE.get(i); };
-const MSRC = { vfdb: 'MIT-BIH Malignant Ventricular Ectopy', cudb: 'CU Ventricular Tachyarrhythmia', mitdb: 'MIT-BIH Arrhythmia', cn: 'Chapman-Shaoxing/Ningbo' };
+const MSRC = { vfdb: 'MIT-BIH Malignant Ventricular Ectopy', cudb: 'CU Ventricular Tachyarrhythmia', mitdb: 'MIT-BIH Arrhythmia', cn: 'Chapman-Shaoxing/Ningbo', sph: 'SPH (Shandong)', ptbxl: 'PTB-XL' };
 const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 function describeMonNoise(P) {
   if (!P || P.level === 'limpio') return 'Tira limpia.';
@@ -653,7 +653,7 @@ function makeMonitor(opt = {}) {
 }
 const ctxText = (m, ctx) => m.c === 'riva' ? CONTEXTO_RIVA : CONTEXTOS[ctx];
 function monFeedback(m, ctx, res, rAns, kAns, P) {
-  const C = MON_CATS[m.c], okK = CONDUCTA_OK[m.c][ctx];
+  const C = MON_CATS[m.c], okK = conductaOk(m, ctx);
   const V = res ? (res.g === 'ok' ? 'Correcto: ritmo y conducta' : res.rOk ? 'Ritmo correcto, conducta no' : res.kOk ? 'Conducta correcta, ritmo no' : 'Ni ritmo ni conducta') : 'Monitor';
   return h('div', { class: 'fb' },
     h('div', { class: 'verdict ' + (res ? res.g : 'info') }, V),
@@ -661,14 +661,15 @@ function monFeedback(m, ctx, res, rAns, kAns, P) {
       h('div', {}, h('h3', {}, C.name), m.acc.length ? h('div', { class: 'small muted' }, 'La base de datos no distingue FV de flutter ventricular en este registro: valen las dos.') : null,
         rAns && !res.rOk ? h('div', { class: 'small muted' }, 'Tu ritmo: ' + MON_CATS[rAns].name) : null),
       h('div', {}, h('h4', {}, 'Situación y conducta'), h('div', { class: 'small' }, ctxText(m, ctx)),
-        h('div', { style: 'margin-top:6px' }, h('b', {}, 'Conducta: '), CONDUCTAS[okK]), kAns && kAns !== okK ? h('div', { class: 'small muted' }, 'Tu conducta: ' + CONDUCTAS[kAns]) : null),
+        h('div', { style: 'margin-top:6px' }, h('b', {}, 'Conducta: '), CONDUCTAS[okK]), kAns && kAns !== okK ? h('div', { class: 'small muted' }, 'Tu conducta: ' + CONDUCTAS[kAns]) : null,
+        m.qrs && ctx === 'inestable' ? h('div', { class: 'small', style: 'margin-top:4px' }, m.qrs === 'ancho' ? 'QRS ancho: bloqueo probablemente por debajo del His. La atropina es ineficaz y puede empeorarlo (ERC 2025).' : 'QRS estrecho: primero atropina; si no responde, perfusión de isoprenalina o adrenalina y marcapasos.') : null),
       h('div', {}, h('h4', {}, 'En esta tira'),
         h('div', { class: 'facts' }, h('span', {}, 'Amplitud ' + fmt(m.p2p, 1) + ' mV (' + Math.round(m.p2p * 10) + ' mm a ×1)'), h('span', {}, MSRC[m.db] + ' · registro ' + m.rec + ' · ' + mmss(m.t0))),
         P ? h('div', { class: 'small muted', style: 'margin-top:4px' }, h('b', {}, 'Artefacto: '), describeMonNoise(P)) : null),
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      h('div', { class: 'src' }, (m.db === 'cn' ? 'Derivación II de un ECG de ' + MSRC[m.db] + ', etiqueta de la fuente revisada visualmente' : 'Episodio anotado por expertos en ' + MSRC[m.db]) + ' (PhysioNet) · artefacto simulado')));
+      h('div', { class: 'src' }, ({ cn: 'Derivación II de un ECG de Chapman-Shaoxing/Ningbo (PhysioNet), etiqueta de la fuente revisada visualmente', sph: 'Derivación II de un ECG de SPH (figshare), informe revisado por cardiólogos', ptbxl: 'Derivación II de un ECG de PTB-XL (PhysioNet), informe del cardiólogo' }[m.db] || 'Episodio anotado por expertos en ' + MSRC[m.db] + ' (PhysioNet)') + ' · artefacto simulado')));
 }
 function monAnswer(onDone, submitLabel) {
   let r = null, k = null;
@@ -679,7 +680,7 @@ function monAnswer(onDone, submitLabel) {
     h('div', { class: 'sec-title' }, 'Conducta'), h('div', { class: 'opts' }, kB), h('div', { class: 'next', style: 'margin-top:12px' }, go)), rB, kB };
 }
 function markMon(rB, kB, m, ctx, rAns, kAns) {
-  const okK = CONDUCTA_OK[m.c][ctx];
+  const okK = conductaOk(m, ctx);
   rB.forEach((b) => { const c = b.dataset.c; b.disabled = true; b.classList.remove('sel'); b.classList.add(c === m.c || m.acc.includes(c) ? 'ok' : c === rAns ? 'bad' : 'dim'); });
   kB.forEach((b) => { const c = b.dataset.c; b.disabled = true; b.classList.remove('sel'); b.classList.add(c === okK ? 'ok' : c === kAns ? 'bad' : 'dim'); });
 }

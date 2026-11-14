@@ -53,7 +53,7 @@ Leyenda: ✅ ya en la v0.1 · 🟢 señal real con etiqueta fiable · 🟡 seña
 |---|---|---|
 | Mobitz I (Wenckebach) | 🟢 Chapman/Ningbo, SPH; 🟡 MIMIC | 31 · 9 · ~240 |
 | Mobitz II | 🟢 Chapman/Ningbo, SPH; 🟡 MIMIC | 7 · 3 · ~60 |
-| BAV 2:1 | 🟢 SPH; 🟢 MIT-BIH 231 (monitor) | 35 · 700 s |
+| BAV 2:1 | 🟢 SPH; ✅ MIT-BIH 231 (monitor) | 35 · 700 s |
 | BAV avanzado | 🟢 SPH | 3 |
 | BAV completo | ✅ PTB-XL; 🟢 Chapman/Ningbo, SPH | 5 · 76 · 22 |
 | Disociación AV | 🟢 Chapman/Ningbo | 59 |
@@ -107,4 +107,5 @@ Hiperpotasemia, hipotermia, intoxicación por tricíclicos, Wellens, de Winter y
 3. ✅ **OMI** (hecho): STAFF III por arteria, con basal, minuto 1 y final del inflado, incluida la circunfleja.
 4. ✅ **Brugada**, QT por fármacos, FA preexcitada e inversión de electrodos (hecho).
 5. ✅ **Modo imagen** (hecho): 22 ECG de Wikimedia Commons para 13 entidades sin señal. Pendiente: torsade, IAM de VD, fallo de captura.
-6. **Banco propio** de ECG anonimizados del usuario.
+6. ✅ **Monitor periparada** (hecho): TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas, con conducta ERC 2025.
+7. **Banco propio** de ECG anonimizados del usuario.

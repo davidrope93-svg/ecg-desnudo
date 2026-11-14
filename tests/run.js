@@ -190,5 +190,23 @@ t('fase 5: corrección (correcta = ok, hallazgo secundario = parcial, otra = mal
 const hp = IM.find((m) => (m.parcial || []).length);
 t('fase 5: lectura parcial defendible (se ofrece y puntúa como parcial)', !hp || (gradeImg(hp, hp.parcial[0]) === 'partial' && imgOptions(hp, IC, rng(3)).includes(hp.parcial[0])));
 t('fase 5: dosis con unidades seguras (mcg, unidades; nunca µg ni UI)', Object.values(IC).every((c) => !/µg|\bUI\b/.test(c.sva + c.trampa)));
+
+// 14. Fase 6: periparada en el modo monitor
+const M6 = MM, KO = E('CONDUCTA_OK'), KD = E('CONDUCTAS'), conductaOk = E('conductaOk'), gradeMon6 = E('gradeMon');
+const P6 = ['tsv', 'fa', 'flutter', 'bradi', 'bav2', 'bav3'];
+t('fase 6: al menos 5 tiras de cada ritmo periparada', P6.every((c) => M6.filter((m) => m.c === c).length >= 5), P6.map((c) => c + ' ' + M6.filter((m) => m.c === c).length).join());
+t('fase 6: contenido completo de los ritmos nuevos', P6.every((c) => MC[c] && MC[c].name && MC[c].claves.length >= 3 && MC[c].trampa && MC[c].sva));
+t('fase 6: cada situación de cada tira tiene una conducta definida y existente', M6.every((m) => m.ctx.every((x) => KD[conductaOk(m, x)])));
+t('fase 6: inestable con taquicardia supraventricular = cardioversión sincronizada', ['tsv', 'fa', 'flutter'].every((c) => KO[c].inestable === 'cardioversion'));
+t('fase 6: estable: TSV = vagales/adenosina; FA y flutter = control de FC', KO.tsv.pulso === 'adenosina' && KO.fa.pulso === 'control_fc' && KO.flutter.pulso === 'control_fc');
+const BV = M6.filter((m) => m.c === 'bav2' || m.c === 'bav3');
+t('fase 6: todos los BAV tienen anchura del QRS', BV.length >= 10 && BV.every((m) => m.qrs === 'ancho' || m.qrs === 'estrecho'));
+t('fase 6: BAV con QRS ancho e inestable = marcapasos o perfusión, nunca atropina (ERC 2025)', BV.filter((m) => m.qrs === 'ancho').every((m) => conductaOk(m, 'inestable') === 'marcapasos' && !gradeMon6(m, m.c, 'atropina', 'inestable').kOk));
+t('fase 6: BAV con QRS estrecho e inestable = atropina', BV.filter((m) => m.qrs === 'estrecho').every((m) => conductaOk(m, 'inestable') === 'atropina'));
+t('fase 6: hay BAV de QRS ancho y de QRS estrecho', BV.some((m) => m.qrs === 'ancho') && BV.some((m) => m.qrs === 'estrecho'));
+t('fase 6: BAV sin pulso = AESP (RCP y adrenalina)', BV.every((m) => !m.ctx.includes('parada') || conductaOk(m, 'parada') === 'rcp_adr'));
+t('fase 6: las tiras periparada no se ofrecen en parada salvo los BAV', M6.filter((m) => ['tsv', 'fa', 'flutter', 'bradi'].includes(m.c)).every((m) => !m.ctx.includes('parada')));
+t('fase 6: tiras de 10 s sin valores imposibles', (() => { const B6 = new Uint8Array(zlib.gunzipSync(Buffer.from(E('MON_BLOB'), 'base64'))); return M6.filter((m) => P6.includes(m.c)).every((m) => { const x = decodeRecord(B6, m.o, N, 1)[0]; return x.length === 2500 && x.every((v) => isFinite(v) && Math.abs(v) < 6); }); })());
+t('fase 6: dosis periparada en mcg (nunca µg ni UI)', P6.every((c) => !/µg|\bUI\b/.test(MC[c].sva + MC[c].trampa)));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

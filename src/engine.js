@@ -293,7 +293,7 @@ function monitorStrip(sig, level, ctx, seed) {
   return { x, P };
 }
 function gradeMon(meta, rAns, kAns, ctx) {
-  const rOk = rAns === meta.c || meta.acc.includes(rAns), kOk = kAns === CONDUCTA_OK[meta.c][ctx];
+  const rOk = rAns === meta.c || meta.acc.includes(rAns), kOk = kAns === conductaOk(meta, ctx);
   return { rOk, kOk, g: rOk && kOk ? 'ok' : rOk || kOk ? 'partial' : 'bad' };
 }
 

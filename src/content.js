@@ -273,11 +273,23 @@ const MON_CATS = {
     trampa: 'El monitor no te dice si hay pulso: compruébalo. Sin pulso se desfibrila; con pulso y signos adversos se cardiovierte sincronizada. Una TV muy rápida y sinusoidal se confunde con flutter ventricular.',
     sva: 'Sin pulso: como la FV. Con pulso y signos adversos: cardioversión sincronizada, primera descarga 120–150 J con aumentos escalonados; si fracasa, amiodarona 300 mg IV en 10–20 min y nuevo intento (ERC 2025). Sedoanalgesia si está consciente.',
   },
-  asis: {
-    name: 'Asistolia',
-    claves: ['Sin actividad eléctrica ventricular', 'Línea casi plana con ligera ondulación de la línea de base', 'Puede haber ondas P sin QRS (parada ventricular)'],
-    trampa: 'Antes de llamarla asistolia: electrodos y cables conectados, ganancia ×2–×4 y otra derivación. Busca ondas P: la parada ventricular puede responder al marcapasos (ERC 2025). Una FV fina claramente identificada se desfibrila.',
-    sva: 'No desfibrilable: RCP de calidad, adrenalina 1 mg lo antes posible y cada 3–5 min, y causas reversibles (4H y 4T).',
+  tsv: {
+    name: 'TSV de QRS estrecho',
+    claves: ['Taquicardia regular de QRS estrecho, a menudo de 150 a 250 lpm', 'P invisibles o justo detrás del QRS', 'Inicio y fin bruscos'],
+    trampa: 'A ~150 lpm piensa en flutter 2:1 y busca ondas F: las maniobras vagales o la adenosina lo desenmascaran. Antes de la adenosina, descarta preexcitación en el ECG basal.',
+    sva: 'Estable: maniobras vagales (Valsalva modificada, en decúbito y elevando las piernas) y, si fracasan, adenosina 6 mg IV en bolo rápido, después 12 mg y considerar 18 mg, con el ECG registrando. Inestable: cardioversión sincronizada, 70–120 J con aumentos escalonados (ERC 2025).',
+  },
+  fa: {
+    name: 'FA con respuesta rápida',
+    claves: ['Ritmo irregularmente irregular', 'Sin ondas P: línea de base fibrilatoria o casi plana', 'QRS estrecho salvo bloqueo de rama o preexcitación'],
+    trampa: 'Rápida, ancha e irregular es FA preexcitada: nada de frenadores del nodo AV. Y una taquicardia compensadora (sepsis, hipovolemia) no se frena: se trata la causa.',
+    sva: 'Inestable: cardioversión sincronizada con la energía máxima del desfibrilador. Estable: control de la frecuencia (betabloqueante, diltiazem o verapamilo; con FEVI < 40 %, la menor dosis de betabloqueante que deje la FC < 110 y digoxina si hace falta) y busca el desencadenante (ERC 2025).',
+  },
+  flutter: {
+    name: 'Flutter auricular',
+    claves: ['Ondas F en dientes de sierra a ~300/min, mejor visibles en II', 'Conducción 2:1 (FC ~150), 3:1, 4:1 o variable', 'QRS estrecho entre las ondas F'],
+    trampa: 'Con 2:1 y una FC fija de ~150, las F se esconden en el QRS y la T y parece una TSV. Si dudas, las maniobras vagales o la adenosina frenan la conducción y las muestran.',
+    sva: 'Inestable: cardioversión sincronizada, primera descarga 70–120 J con aumentos escalonados (ERC 2025). Estable: control de la frecuencia (betabloqueante o calcioantagonista).',
   },
   riva: {
     name: 'RIVA',
@@ -297,11 +309,39 @@ const MON_CATS = {
     trampa: 'Un ritmo organizado en el monitor no garantiza pulso. Sin pulso es una AESP: no desfibrilable.',
     sva: 'AESP: RCP, adrenalina 1 mg lo antes posible, causas reversibles y ecografía en las pausas. Con pulso: tratamiento según el cuadro clínico.',
   },
+  bradi: {
+    name: 'Bradicardia sinusal con pausas',
+    claves: ['P sinusal delante de cada QRS, a < 60 lpm', 'Pausas sin P ni QRS (paro sinusal o bloqueo sinoauricular)', 'Una pausa > 3 s en vigilia es un signo de alto riesgo (ERC 2025)'],
+    trampa: 'Antes de llamar asistolia a una pausa, sube la ganancia y mira otra derivación. Busca la causa: betabloqueantes, antagonistas del calcio, digoxina, hipotermia, hipoxia, HTIC.',
+    sva: 'Con signos adversos: atropina 500 mcg IV, repetible cada 3–5 min hasta 3 mg; si fracasa, isoprenalina (5 mcg/min) o adrenalina (2–10 mcg/min) en perfusión y marcapasos transcutáneo (ERC 2025).',
+  },
+  bav2: {
+    name: 'BAV 2.º grado (Mobitz II, 2:1 o avanzado)',
+    claves: ['P regulares y algunas sin QRS detrás', 'PR constante en los latidos conducidos; en 2:1, una P bloqueada entre cada QRS, a menudo sobre la T', 'Con QRS ancho, el bloqueo suele estar por debajo del haz de His'],
+    trampa: 'Un 2:1 con la P escondida en la T parece una bradicardia sinusal. En un bloqueo de alto grado con QRS ancho la atropina es ineficaz y puede empeorarlo (ERC 2025).',
+    sva: 'Con signos adversos: si el QRS es estrecho, atropina 500 mcg IV, repetible hasta 3 mg; si es ancho o no responde, isoprenalina o adrenalina en perfusión y marcapasos transcutáneo como puente (ERC 2025). Riesgo de asistolia: parches puestos aunque esté estable. Sin pulso es una AESP.',
+  },
+  bav3: {
+    name: 'BAV completo',
+    claves: ['Disociación AV: P y QRS cada uno a su ritmo, sin relación', 'Escape regular y lento: de la unión (QRS estrecho, 40–60 lpm) o ventricular (QRS ancho, < 40 lpm)', 'PR que cambia sin patrón'],
+    trampa: 'Un escape de QRS ancho está por debajo del His: la atropina no funciona. Sin pulso es una AESP: RCP y adrenalina, no atropina.',
+    sva: 'Con signos adversos: si el escape es estrecho, atropina 500 mcg IV, repetible hasta 3 mg; si es ancho o no responde, isoprenalina (5 mcg/min) o adrenalina (2–10 mcg/min) en perfusión y marcapasos transcutáneo con analgesia y sedación, como puente al transvenoso (ERC 2025). Busca IAM inferior, fármacos e hiperpotasemia.',
+  },
+  asis: {
+    name: 'Asistolia',
+    claves: ['Sin actividad eléctrica ventricular', 'Línea casi plana con ligera ondulación de la línea de base', 'Puede haber ondas P sin QRS (parada ventricular)'],
+    trampa: 'Antes de llamarla asistolia: electrodos y cables conectados, ganancia ×2–×4 y otra derivación. Busca ondas P: la parada ventricular puede responder al marcapasos (ERC 2025). Una FV fina claramente identificada se desfibrila.',
+    sva: 'No desfibrilable: RCP de calidad, adrenalina 1 mg lo antes posible y cada 3–5 min, y causas reversibles (4H y 4T).',
+  },
 };
 const CONDUCTAS = {
   descarga: 'Desfibrilar (descarga no sincronizada) y RCP 2 min',
   cardioversion: 'Cardioversión eléctrica sincronizada',
   rcp_adr: 'RCP 2 min y adrenalina 1 mg, sin descarga',
+  adenosina: 'Maniobras vagales y, si fracasan, adenosina IV',
+  control_fc: 'Control de la frecuencia con fármacos',
+  atropina: 'Atropina 500 mcg IV',
+  marcapasos: 'Marcapasos transcutáneo o perfusión de isoprenalina o adrenalina',
   observar: 'No descargar: monitorizar y tratar la causa',
 };
 const CONTEXTOS = {
@@ -310,9 +350,13 @@ const CONTEXTOS = {
   pulso: 'Consciente y con pulso. TA 120/75 mmHg, buena perfusión.',
 };
 const CONTEXTO_RIVA = 'SCACEST en tratamiento: con pulso, TA 115/70 mmHg y buena perfusión.';
-const CONDUCTA_OK = { fv: { parada: 'descarga' }, flv: { parada: 'descarga' }, tv: { parada: 'descarga', inestable: 'cardioversion' }, asis: { parada: 'rcp_adr' }, riva: { pulso: 'observar' }, bigem: { pulso: 'observar' }, sinusal: { parada: 'rcp_adr', pulso: 'observar' } };
+const CONDUCTA_OK = { fv: { parada: 'descarga' }, flv: { parada: 'descarga' }, tv: { parada: 'descarga', inestable: 'cardioversion' }, asis: { parada: 'rcp_adr' }, riva: { pulso: 'observar' }, bigem: { pulso: 'observar' }, sinusal: { parada: 'rcp_adr', pulso: 'observar' },
+  tsv: { inestable: 'cardioversion', pulso: 'adenosina' }, fa: { inestable: 'cardioversion', pulso: 'control_fc' }, flutter: { inestable: 'cardioversion', pulso: 'control_fc' },
+  bradi: { inestable: 'atropina' }, bav2: { inestable: 'atropina', parada: 'rcp_adr' }, bav3: { inestable: 'atropina', parada: 'rcp_adr' } };
+// Por tira: meta.k sustituye la conducta de una situación (BAV con QRS ancho: marcapasos o perfusión, no atropina)
+const conductaOk = (meta, ctx) => (meta.k && meta.k[ctx]) || CONDUCTA_OK[meta.c][ctx];
 
-if (typeof module !== 'undefined') module.exports.MON = { MON_CATS, CONDUCTAS, CONTEXTOS, CONDUCTA_OK };
+if (typeof module !== 'undefined') module.exports.MON = { MON_CATS, CONDUCTAS, CONTEXTOS, CONDUCTA_OK, conductaOk };
 
 /* ---------- Oclusión coronaria real (fase 3, STAFF III) ----------
    ECG registrados mientras un balón de angioplastia ocluye por completo una coronaria durante minutos. */
