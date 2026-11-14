@@ -124,5 +124,22 @@ const HR = { tv: (h) => h >= 110, trnav: (h) => h >= 110, trav: (h) => h >= 110,
 t('fase 2: frecuencia coherente con el diagnóstico', F2.every((m) => !HR[m.c] || HR[m.c](m.hr)), F2.filter((m) => HR[m.c] && !HR[m.c](m.hr)).map((m) => m.id + ':' + m.hr));
 t('fase 2: TRNAV y TRAV aceptan «TSV» como hallazgo parcial', F2.filter((m) => m.c === 'trnav' || m.c === 'trav').every((m) => m.sec.includes('tsv')));
 t('fase 2: RIVA en monitor ampliado (≥ 8 tiras)', MM.filter((m) => m.c === 'riva').length >= 8);
+
+// 11. Fase 3: oclusiones reales de STAFF III
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../occ_data.js'), 'utf8'), ctx, { filename: 'occ_data.js' });
+const OM = E('OCC_META'), OC = E('OCC_CATS');
+const OB = new Uint8Array(zlib.gunzipSync(Buffer.from(E('OCC_BLOB'), 'base64')));
+let occOk = true;
+OM.forEach((p) => p.wins.forEach((w) => { const r = decodeRecord(OB, w.o, N); if (r.some((a) => a.some((v) => !isFinite(v) || Math.abs(v) > 8))) occOk = false; }));
+t('oclusión: ventanas decodificadas y plausibles', occOk);
+t('oclusión: al menos 70 pacientes', OM.length >= 70, OM.length);
+for (const a of ['da', 'cd', 'cx']) t('oclusión: al menos 10 pacientes con ' + a, OM.filter((p) => p.art === a).length >= 10);
+t('oclusión: primero basal y después tiempos crecientes', OM.every((p) => p.wins[0].t < 0 && p.wins.slice(1).every((w, i, arr) => w.t > 0 && (i === 0 || w.t > arr[i - 1].t))));
+t('oclusión: contenido completo', Object.values(OC).every((c) => c.name && c.opt && c.claves.length >= 3 && c.trampa && c.sva));
+const meanD = (a, li) => { const ps = OM.filter((p) => p.art === a); return ps.reduce((s, p) => s + p.wins[p.wins.length - 1].st[li] - p.wins[0].st[li], 0) / ps.length; };
+const Li = (l) => LEADS.indexOf(l);
+t('oclusión DA: sube el ST en V2–V3', meanD('da', Li('V2')) > 0.1 && meanD('da', Li('V3')) > 0.1);
+t('oclusión CD: sube en III y baja en aVL', meanD('cd', Li('III')) > 0.05 && meanD('cd', Li('aVL')) < -0.05);
+t('oclusión Cx: baja en V1–V3 (posterior)', meanD('cx', Li('V2')) < -0.05);
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

@@ -97,7 +97,7 @@ function makeViewer(opt = {}) {
     S.settings.zoom = Z[Math.max(0, Math.min(Z.length - 1, i + d))]; save(); render();
   }
   function signals() {
-    const r = rec8(st.idx);
+    const r = st.rec;
     const leads = st.clean ? twelveFrom(r[0], r[1], r.slice(2)) : st.noisy.leads;
     return applyFilters(leads, st.filt, ECG_FS);
   }
@@ -212,8 +212,9 @@ function makeViewer(opt = {}) {
   return {
     el,
     set(idx, seed, level) {
-      st.idx = idx; st.meta = ECG_META[idx]; st.seed = seed; st.level = level; st.clean = false; st.c = null;
-      const r = rec8(idx);
+      const ext = typeof idx === 'object' ? idx : null;
+      st.idx = ext ? 0 : idx; st.meta = ext ? ext.meta : ECG_META[idx]; st.seed = seed; st.level = level; st.clean = false; st.c = null;
+      const r = ext ? [ext.rec[0], ext.rec[1], ...ext.rec[2]] : rec8(idx); st.rec = r;
       st.noisy = noisyLeads(r, level, seed);
       bClean.classList.toggle('hidden', st.noisy.P.level === 'limpio' || !opt.allowClean);
       requestAnimationFrame(render);
@@ -320,6 +321,7 @@ function home() {
     h('div', { class: 'grid3' },
       h('button', { class: 'mode primary', onclick: () => practice(false) }, h('b', {}, 'Práctica'), h('span', { class: 'muted' }, 'Un ECG tras otro, con la explicación al responder. Insiste en lo que más fallas.')),
       h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'FV, TV, asistolia y más en tira de monitor real. Ritmo y conducta: ¿descargo o no?')),
+      h('button', { class: 'mode', onclick: occPractice }, h('b', {}, 'Oclusión coronaria'), h('span', { class: 'muted' }, 'ECG reales con el balón ocluyendo DA, CD o Cx. ¿Hay oclusión? ¿Qué arteria?')),
       h('button', { class: 'mode', onclick: exam }, h('b', {}, 'Examen · 10 ECG'), h('span', { class: 'muted' }, 'Sin pistas ni corrección hasta el final. Nota y tiempo.')),
       h('button', { class: 'mode', onclick: atlas }, h('b', {}, 'Atlas'), h('span', { class: 'muted' }, 'Cada diagnóstico con sus criterios, trampas y todos sus ejemplos.'))),
     h('div', { class: 'sec-title' }, 'Ajustes'),
@@ -458,6 +460,7 @@ function atlas() {
       const n = ECG_META.filter((m) => m.c === c).length, s = S.stats[c];
       return h('button', { onclick: () => atlasCat(c, 0) }, h('b', {}, CATS[c].name), h('small', {}, n + ' ejemplos' + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : '')));
     }))]).flat(),
+    h('div', { class: 'sec-title' }, 'Oclusión coronaria (STAFF III)'), h('div', { class: 'atlas' }, ['da', 'cd', 'cx'].map((c) => h('button', { onclick: () => occWithLoad(() => occEvolution(OCC_META.find((p) => p.art === c).id, 60)) }, h('b', {}, OCC_CATS[c].name), h('small', {}, 'Basal, minuto 1 y final del inflado')))),
     h('div', { class: 'sec-title' }, 'Monitor'), h('div', { class: 'atlas' }, Object.keys(MON_CATS).map((c) => {
       const n = MON_META.filter((m) => m.c === c).length, s = S.stats['m_' + c];
       return h('button', { onclick: () => atlasMon(c, 0) }, h('b', {}, MON_CATS[c].name), h('small', {}, n + ' tiras' + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : '')));
@@ -493,6 +496,11 @@ function stats() {
         const s = S.stats[c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
         return h('div', { class: 'stat' }, h('span', {}, CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
       })]).flat(),
+      h('div', { class: 'sec-title', style: 'margin-top:8px' }, 'Oclusión coronaria'),
+      Object.keys(OCC_CATS).map((c) => {
+        const s = S.stats['o_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
+        return h('div', { class: 'stat' }, h('span', {}, OCC_CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
+      }),
       h('div', { class: 'sec-title', style: 'margin-top:8px' }, 'Monitor'),
       Object.keys(MON_CATS).map((c) => {
         const s = S.stats['m_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
@@ -763,6 +771,112 @@ function atlasMon(c, k) {
   mon.set(idx, hashSeed(m.id, atlasNoise, 'mon'), atlasNoise, ctx, false);
   app.append(monFeedback(m, ctx, null, null, null, atlasNoise === 'limpio' ? null : mon.noise()));
   setKeys((e) => { if (e.key === 'ArrowRight') atlasMon(c, k + 1); if (e.key === 'ArrowLeft') atlasMon(c, k - 1); });
+}
+
+
+/* ---------- Oclusión coronaria real (fase 3, STAFF III) ---------- */
+let OCC_BYTES = null, occLoading = null;
+function loadOcc() {
+  if (OCC_BYTES) return Promise.resolve();
+  if (!occLoading) occLoading = new Promise((ok, ko) => {
+    const s = document.createElement('script'); s.src = 'occ_data.js';
+    s.onload = async () => {
+      try {
+        const b = Uint8Array.from(atob(OCC_BLOB), (c) => c.charCodeAt(0));
+        OCC_BYTES = new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+        ok();
+      } catch (e) { ko(e); }
+    };
+    s.onerror = () => { occLoading = null; ko(new Error('no se pudo descargar el banco de oclusiones')); };
+    document.head.appendChild(s);
+  });
+  return occLoading;
+}
+const OCC_CACHE = new Map();
+function occRec(p, w) {
+  const key = p.id + ':' + w.t;
+  if (!OCC_CACHE.has(key)) OCC_CACHE.set(key, decodeRecord(OCC_BYTES, w.o, ECG_N));
+  return OCC_CACHE.get(key);
+}
+const occExt = (p, w) => { const r = occRec(p, w); return { rec: [r[0], r[1], r.slice(2)], meta: { sex: p.sex, age: p.age } }; };
+const tLabel = (t) => t < 0 ? 'Basal' : t === 60 ? 'Minuto 1' : 'Final (' + mmss(t) + ')';
+function occWithLoad(fn) {
+  mount(caseShell([h('span', { class: 'title' }, 'Oclusión coronaria')]), h('div', { class: 'card' }, 'Cargando los ECG de STAFF III (unos 3,7 MB, solo la primera vez)…'));
+  loadOcc().then(fn).catch((e) => mount(caseShell([]), h('div', { class: 'card' }, 'No se pudo cargar: ' + e.message)));
+}
+function dstGrid(p, w) {
+  const b = p.wins[0].st;
+  return h('div', { class: 'dst' }, LEADS.map((l, i) => {
+    const v = (w.st[i] - b[i]) * 10;
+    return h('span', { class: v >= 1 ? 'up' : v <= -1 ? 'down' : '' }, h('b', {}, l), (v > 0 ? '+' : '') + fmt(v, 1));
+  }));
+}
+function occInfo(p, w) {
+  const C = OCC_CATS[p.art];
+  return h('div', { class: 'body' },
+    h('div', {}, h('h4', {}, 'Qué está pasando'), h('div', {}, w.t < 0 ? 'ECG basal en hemodinámica, antes de inflar el balón.' : 'Balón inflado en la ' + p.loc + ': ' + (w.t === 60 ? 'primer minuto' : 'final del inflado, a los ' + mmss(w.t)) + ' de oclusión completa.'),
+      h('div', { class: 'small muted', style: 'margin-top:4px' }, (p.sex === 'M' ? 'Varón' : 'Mujer') + (p.age ? ', ' + p.age + ' años' : '') + (p.prior ? ' · ' + p.prior : '') + ' · inflado total ' + mmss(p.dur))),
+    w.t >= 0 ? h('div', {}, h('h4', {}, 'Cambio del ST frente al basal (mm, medida automática orientativa)'), dstGrid(p, w)) : null,
+    h('div', {}, h('h4', {}, C.name), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
+    h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
+    h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
+    h('div', { class: 'src' }, 'STAFF III (PhysioNet) · paciente ' + p.id + ' · arteria y tiempo de oclusión conocidos · artefacto simulado'));
+}
+function occPick() {
+  const arts = ['da', 'cd', 'cx'], a = arts[Math.floor(R() * 3)];
+  const ps = OCC_META.filter((p) => p.art === a), p = ps[Math.floor(R() * ps.length)];
+  const x = R(), w = x < 0.25 ? p.wins[0] : (x < 0.45 && p.wins.length > 2 ? p.wins[1] : p.wins[p.wins.length - 1]);
+  return { p, w, truth: w.t < 0 ? 'basal' : p.art };
+}
+function occPractice() {
+  occWithLoad(() => {
+    const viewer = makeViewer({ ctx: true, allowClean: false });
+    const bar = h('span', { class: 'pill' }), ctxBox = h('div'), ansBox = h('div'), fbBox = h('div');
+    mount(caseShell([h('span', { class: 'title' }, 'Oclusión coronaria'), bar]), ctxBox, viewer.el, ansBox, fbBox);
+    current = viewer;
+    let count = 0;
+    function next() {
+      const q = occPick(); count++; bar.textContent = 'ECG ' + count;
+      ctxBox.replaceChildren(h('div', { class: 'ctx' }, h('b', {}, 'Situación: '), 'angioplastia programada en hemodinámica, ' + (q.p.sex === 'M' ? 'varón' : 'mujer') + (q.p.age ? ' de ' + q.p.age + ' años' : '') + (q.p.prior ? ', ' + q.p.prior : '') + '. ¿Hay ahora una oclusión coronaria? ¿De qué arteria?'));
+      viewer.allowClean(false); viewer.set(occExt(q.p, q.w), newSeed(), S.settings.noise);
+      fbBox.replaceChildren();
+      const btns = Object.keys(OCC_CATS).map((c) => h('button', { class: 'opt', 'data-c': c, onclick: () => answer(c) }, OCC_CATS[c].opt));
+      let done = false;
+      function answer(c) {
+        if (done) return; done = true;
+        const g = c === q.truth ? 'ok' : (q.truth !== 'basal' && c !== 'basal') ? 'partial' : 'bad';
+        const s = S.stats['o_' + q.truth] || (S.stats['o_' + q.truth] = { n: 0, ok: 0, p: 0 }); s.n++; if (g === 'ok') s.ok++; if (g === 'partial') s.p++; S.total++; save();
+        btns.forEach((b) => { const k = b.dataset.c; b.disabled = true; b.classList.add(k === q.truth ? 'ok' : k === c ? (g === 'partial' ? 'partial' : 'bad') : 'dim'); });
+        viewer.allowClean(true);
+        let showBase = false;
+        const bBase = h('button', { class: 'btn ghost', onclick: () => { showBase = !showBase; viewer.set(occExt(q.p, showBase ? q.p.wins[0] : q.w), newSeed(), 'limpio'); bBase.textContent = showBase ? 'Volver al ECG de la pregunta' : 'Comparar con el basal'; } }, 'Comparar con el basal');
+        const V = { ok: 'Correcto', partial: 'Hay oclusión, pero no de esa arteria', bad: q.truth === 'basal' ? 'No: es el ECG basal, sin oclusión' : 'No: hay una oclusión en curso' };
+        fbBox.replaceChildren(h('div', { class: 'fb' }, h('div', { class: 'verdict ' + g }, V[g]), h('div', { class: 'body', style: 'padding-bottom:0' }, h('h3', {}, OCC_CATS[q.truth].name)), occInfo(q.p, q.w)),
+          h('div', { class: 'next', style: 'margin-top:12px' }, q.w.t >= 0 ? bBase : null, h('button', { class: 'btn ghost', onclick: () => occEvolution(q.p.id, q.w.t, occPractice) }, 'Ver la evolución'), h('button', { class: 'btn', onclick: next }, 'Siguiente ›')));
+        fbBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      ansBox.replaceChildren(h('div', { class: 'answers' }, h('div', { class: 'sec-title', style: 'margin-top:4px' }, '¿Oclusión ahora?'), h('div', { class: 'opts mopts' }, btns)));
+      setKeys((e) => { if (!done && /^[1-4]$/.test(e.key)) btns[+e.key - 1].click(); else if (done && e.key === 'Enter') next(); });
+      window.scrollTo({ top: 0 });
+    }
+    next();
+  });
+}
+function occEvolution(id, t, back) {
+  occWithLoad(() => {
+    const p = OCC_META.find((x) => x.id === id), same = OCC_META.filter((x) => x.art === p.art), k = same.indexOf(p);
+    const w = p.wins.find((x) => x.t === t) || p.wins[p.wins.length - 1];
+    const viewer = makeViewer({ ctx: true, allowClean: true });
+    mount(h('div', { class: 'casebar' }, h('button', { class: 'tool', onclick: back || atlas }, '‹ Volver'), h('span', { class: 'title' }, OCC_CATS[p.art].name),
+      h('span', { class: 'pill' }, (k + 1) + ' / ' + same.length),
+      h('button', { class: 'tool', onclick: () => occEvolution(same[(k - 1 + same.length) % same.length].id, t, back) }, '‹'),
+      h('button', { class: 'tool', onclick: () => occEvolution(same[(k + 1) % same.length].id, t, back) }, '›')),
+      h('div', { class: 'row', style: 'margin-bottom:8px' }, h('span', { class: 'small muted' }, 'Momento:'), seg(p.wins.map((x) => [x.t, tLabel(x.t)]), w.t, (x) => occEvolution(id, x, back))),
+      viewer.el, h('div', { class: 'fb', style: 'margin-top:12px' }, occInfo(p, w)));
+    current = viewer;
+    viewer.set(occExt(p, w), hashSeed(p.id, w.t), 'limpio');
+    setKeys((e) => { const i = p.wins.indexOf(w); if (e.key === 'ArrowRight' && i < p.wins.length - 1) occEvolution(id, p.wins[i + 1].t, back); if (e.key === 'ArrowLeft' && i > 0) occEvolution(id, p.wins[i - 1].t, back); });
+  });
 }
 
 document.getElementById('home-link').addEventListener('click', home);

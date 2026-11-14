@@ -292,3 +292,33 @@ const CONTEXTO_RIVA = 'SCACEST en tratamiento: con pulso, TA 115/70 mmHg y buena
 const CONDUCTA_OK = { fv: { parada: 'descarga' }, flv: { parada: 'descarga' }, tv: { parada: 'descarga', inestable: 'cardioversion' }, asis: { parada: 'rcp_adr' }, riva: { pulso: 'observar' }, bigem: { pulso: 'observar' }, sinusal: { parada: 'rcp_adr', pulso: 'observar' } };
 
 if (typeof module !== 'undefined') module.exports.MON = { MON_CATS, CONDUCTAS, CONTEXTOS, CONDUCTA_OK };
+
+/* ---------- Oclusión coronaria real (fase 3, STAFF III) ----------
+   ECG registrados mientras un balón de angioplastia ocluye por completo una coronaria durante minutos. */
+const OCC_CATS = {
+  basal: {
+    name: 'Sin oclusión (basal)', opt: 'No: ECG basal',
+    claves: ['ECG del mismo paciente en la sala de hemodinámica, antes de inflar el balón', 'Puede no ser normal: necrosis previas, bloqueos o alteraciones crónicas de la repolarización', 'Es la referencia para juzgar cualquier cambio posterior'],
+    trampa: 'Sin un ECG previo, un cambio pequeño del ST es muy difícil de interpretar. Pide siempre el ECG previo y repite el tuyo si el dolor persiste.',
+    sva: 'Dolor torácico con ECG no diagnóstico: ECG seriados y, si la sospecha es alta, V7–V9 y V3R–V4R (ESC 2023).',
+  },
+  da: {
+    name: 'Oclusión de la descendente anterior (DA)', opt: 'Sí: DA',
+    claves: ['Elevación del ST en V1–V4, máxima en V2–V3', 'Oclusión proximal: también en I y aVL, con descenso especular en II, III y aVF', 'En los primeros minutos: T altas, anchas y simétricas (hiperagudas) antes de que suba el ST'],
+    trampa: 'Unas T hiperagudas sin elevación del ST ya pueden ser una oclusión. El patrón de de Winter (descenso del ST ascendente con T altas y simétricas en precordiales) equivale a una oclusión de la DA.',
+    sva: 'Activar Codican. Riesgo alto de FV: monitorización y parches colocados.',
+  },
+  cd: {
+    name: 'Oclusión de la coronaria derecha (CD)', opt: 'Sí: CD',
+    claves: ['Elevación del ST en II, III y aVF, mayor en III que en II', 'Descenso especular en I y aVL, a menudo el primer signo', 'Descenso en V1–V3 si hay afectación posterior; elevación en V4R si hay afectación del VD (oclusión proximal)'],
+    trampa: 'Bradicardia, BAV e hipotensión son frecuentes. Si hay afectación del VD, evita nitratos y asegura la precarga.',
+    sva: 'Activar Codican. Registra V3R–V4R y V7–V9.',
+  },
+  cx: {
+    name: 'Oclusión de la circunfleja (Cx)', opt: 'Sí: Cx',
+    claves: ['A menudo poco expresiva en las 12 derivaciones convencionales', 'Descenso del ST en V1–V3: imagen especular de la cara posterior', 'Puede elevar el ST en II, III, aVF y V5–V6 (inferolateral) o en I y aVL'],
+    trampa: 'Con dolor y descenso del ST máximo en V1–V3, registra V7–V9 antes de etiquetarlo de SCASEST: una elevación del ST ≥ 0,5 mm en V7–V9 indica IAM posterior (ESC 2023).',
+    sva: 'Si V7–V9 confirman la elevación, es un SCACEST: activar Codican.',
+  },
+};
+if (typeof module !== 'undefined') module.exports.OCC = { OCC_CATS };

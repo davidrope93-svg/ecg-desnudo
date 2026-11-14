@@ -104,6 +104,11 @@ footer a{color:inherit}
 .ctx{background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14.5px}
 .mopts{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .opt.sel{border-color:var(--ink);background:var(--ink);color:#fff}
+.dst{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-variant-numeric:tabular-nums}
+.dst span{background:#f4f1ec;border-radius:6px;padding:4px 6px;font-size:13px;display:flex;justify-content:space-between}
+.dst span.up{background:#fbe1e3;color:#a1141f}
+.dst span.down{background:#e2ecf8;color:#1d4f91}
+@media (max-width:560px){.dst{grid-template-columns:repeat(4,1fr)}}
 .hidden{display:none!important}
 </style>
 <!--BODY-->
@@ -116,7 +121,7 @@ footer a{color:inherit}
   <button class="hbtn" id="btn-stats">Progreso</button>
 </header>
 <main id="app"></main>
-<footer>ECG reales de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> (Wagner et al., 2020) y medidas de <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Strodthoff et al., 2023), CC BY 4.0. Tiras de monitor de <a href="https://physionet.org/content/vfdb/1.0.0/" target="_blank" rel="noopener">MIT-BIH Malignant Ventricular Ectopy</a> (Greenwald, 1986), <a href="https://physionet.org/content/cudb/1.0.0/" target="_blank" rel="noopener">CU Ventricular Tachyarrhythmia</a> (Nolle et al., 1986) y <a href="https://physionet.org/content/mitdb/1.0.0/" target="_blank" rel="noopener">MIT-BIH Arrhythmia</a> (Moody y Mark, 2001), ODC-By. Bloqueos y taquicardias de <a href="https://physionet.org/content/ecg-arrhythmia/1.0.0/" target="_blank" rel="noopener">Chapman-Shaoxing/Ningbo</a> (Zheng et al., 2020–2022), CC BY 4.0, y <a href="https://doi.org/10.6084/m9.figshare.c.5779802.v1" target="_blank" rel="noopener">SPH</a> (Liu et al., 2022), CC0. Vía PhysioNet (Goldberger et al., 2000) y figshare. El artefacto extrahospitalario es simulado. Herramienta docente.</footer>
+<footer>ECG reales de <a href="https://physionet.org/content/ptb-xl/1.0.3/" target="_blank" rel="noopener">PTB-XL</a> (Wagner et al., 2020) y medidas de <a href="https://physionet.org/content/ptb-xl-plus/1.0.1/" target="_blank" rel="noopener">PTB-XL+</a> (Strodthoff et al., 2023), CC BY 4.0. Tiras de monitor de <a href="https://physionet.org/content/vfdb/1.0.0/" target="_blank" rel="noopener">MIT-BIH Malignant Ventricular Ectopy</a> (Greenwald, 1986), <a href="https://physionet.org/content/cudb/1.0.0/" target="_blank" rel="noopener">CU Ventricular Tachyarrhythmia</a> (Nolle et al., 1986) y <a href="https://physionet.org/content/mitdb/1.0.0/" target="_blank" rel="noopener">MIT-BIH Arrhythmia</a> (Moody y Mark, 2001), ODC-By. Bloqueos y taquicardias de <a href="https://physionet.org/content/ecg-arrhythmia/1.0.0/" target="_blank" rel="noopener">Chapman-Shaoxing/Ningbo</a> (Zheng et al., 2020–2022), CC BY 4.0, y <a href="https://doi.org/10.6084/m9.figshare.c.5779802.v1" target="_blank" rel="noopener">SPH</a> (Liu et al., 2022), CC0. Oclusiones coronarias reales de <a href="https://physionet.org/content/staffiii/1.0.0/" target="_blank" rel="noopener">STAFF III</a> (Martínez et al., 2017), ODC-By. Vía PhysioNet (Goldberger et al., 2000) y figshare. El artefacto extrahospitalario es simulado. Herramienta docente.</footer>
 <div class="loading" id="loading">Preparando los electros…</div>
 <script>
 /*DATA*/
