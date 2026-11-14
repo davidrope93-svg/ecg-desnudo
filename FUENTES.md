@@ -98,7 +98,7 @@ Hiperpotasemia, hipotermia, intoxicación por tricíclicos, Wellens, de Winter y
 
 ## Orden de integración propuesto
 
-1. **Monitor**: FV gruesa y fina, flutter ventricular, TV, asistolia y RIVA de vfdb, cudb y MIT-BIH, como tira del monitor-desfibrilador.
+1. ✅ **Monitor** (hecho): FV, flutter ventricular, TV, asistolia, RIVA, bigeminismo y sinusal de vfdb, cudb y MIT-BIH, como tira del monitor-desfibrilador.
 2. **Bloqueos y taquicardias**: Mobitz I y II, 2:1, avanzado, unión, TRNAV, TRAV y taquicardia auricular (Chapman/Ningbo y SPH), con revisión visual de cada caso por los errores conocidos de Ningbo.
 3. **OMI**: STAFF III por arteria y por minuto de oclusión, incluida la circunfleja.
 4. **Brugada**, QT por fármacos e inversión de electrodos.

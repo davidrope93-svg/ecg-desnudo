@@ -2,7 +2,7 @@
 const fs = require('fs'), vm = require('vm'), zlib = require('zlib'), path = require('path');
 const ctx = { console, module: undefined };
 vm.createContext(ctx);
-for (const f of ['data.js', 'content.js', 'engine.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../src', f), 'utf8'), ctx, { filename: f });
+for (const f of ['data.js', 'monitor_data.js', 'content.js', 'engine.js']) vm.runInContext(fs.readFileSync(path.join(__dirname, '../src', f), 'utf8'), ctx, { filename: f });
 const E = (s) => vm.runInContext(s, ctx);
 const META = E('ECG_META'), CATS = E('CATS'), GROUPS = E('GROUPS');
 const { decodeRecord, twelveFrom, noisyLeads, applyFilters, options, grade, buildDeck, rng, notch, lowpass, LEADS } = E('({decodeRecord, twelveFrom, noisyLeads, applyFilters, options, grade, buildDeck, rng, notch, lowpass, LEADS})');
@@ -81,5 +81,37 @@ const deck = buildDeck(META, sel, {}, rng(9), 20);
 t('mazo de 20', deck.length === 20);
 t('mazo solo con la selección', deck.every((i) => sel.has(META[i].c)));
 t('sin dos seguidos de la misma categoría', deck.every((i, k) => k === 0 || META[i].c !== META[deck[k - 1]].c));
+
+// 9. Monitor: banco, contenido, conducta, artefacto de RCP y nota
+const MM = E('MON_META'), MC = E('MON_CATS'), CK = E('CONDUCTA_OK'), CONDUCTAS = E('CONDUCTAS');
+const { monitorStrip, gradeMon } = E('({monitorStrip, gradeMon})');
+const MB = new Uint8Array(zlib.gunzipSync(Buffer.from(E('MON_BLOB'), 'base64')));
+const mon = MM.map((m) => decodeRecord(MB, m.o, N, 1)[0]);
+t('tiras de monitor decodificadas', mon.length === MM.length && mon.every((a) => a.length === N && a.every((v) => isFinite(v) && Math.abs(v) < 8)));
+for (const c of Object.keys(MC)) {
+  const n = MM.filter((m) => m.c === c).length;
+  t('monitor: al menos 4 tiras de ' + c, n >= 4, n);
+  t('monitor: contenido de ' + c, MC[c].name && MC[c].claves.length >= 3 && MC[c].trampa && MC[c].sva);
+}
+t('monitor: cada contexto tiene conducta válida', MM.every((m) => m.ctx.length && m.ctx.every((x) => CONDUCTAS[CK[m.c][x]])));
+t('monitor: FV y flutter ventricular son desfibrilables en parada', CK.fv.parada === 'descarga' && CK.flv.parada === 'descarga' && CK.tv.parada === 'descarga');
+t('monitor: asistolia y AESP sin descarga, con adrenalina', CK.asis.parada === 'rcp_adr' && CK.sinusal.parada === 'rcp_adr');
+t('monitor: TV con pulso inestable → cardioversión sincronizada', CK.tv.inestable === 'cardioversion');
+t('monitor: asistolia casi plana (< 0,5 mV pico a pico)', MM.filter((m) => m.c === 'asis').every((m) => m.p2p < 0.5));
+const iF = MM.findIndex((m) => m.c === 'fv');
+const s1 = monitorStrip(mon[iF], 'ambulancia', 'parada', 11), s2 = monitorStrip(mon[iF], 'ambulancia', 'parada', 11);
+t('monitor: artefacto reproducible', s1.x.every((v, j) => v === s2.x[j]));
+t('monitor: limpio no modifica la señal', monitorStrip(mon[iF], 'limpio', 'parada', 3).x.every((v, j) => v === mon[iF][j]));
+let cprOk = true;
+for (let seed = 1; seed <= 20; seed++) {
+  const z = monitorStrip(new Float32Array(N), 'leve', 'parada', seed), stop = Math.floor(z.P.cpr * 250);
+  if (!(z.P.cpr >= 2 && z.P.cpr <= 4) || rms(z.x, 0, stop) < 0.2 || rms(z.x, stop + 250, N) > 0.15) cprOk = false;
+}
+t('monitor: compresiones solo hasta la pausa de análisis', cprOk);
+t('monitor: sin compresiones si hay pulso', monitorStrip(new Float32Array(N), 'hostil', 'pulso', 4).P.cpr === 0);
+const cu = MM.find((m) => m.db === 'cudb');
+t('monitor: en cudb vale FV o flutter ventricular', gradeMon(cu, 'flv', 'descarga', 'parada').g === 'ok' && gradeMon(cu, 'fv', 'descarga', 'parada').g === 'ok');
+const tvm = MM.find((m) => m.c === 'tv');
+t('monitor: nota parcial si falla la conducta', gradeMon(tvm, 'tv', 'descarga', 'inestable').g === 'partial' && gradeMon(tvm, 'asis', 'observar', 'inestable').g === 'bad');
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

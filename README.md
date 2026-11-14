@@ -6,7 +6,9 @@ Entrenador de lectura de ECG para SVA extrahospitalaria: ECG reales de 12 deriva
 
 Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes de ECG previstas y lo que cubre cada una están en [FUENTES.md](FUENTES.md).
 
-## Qué hay en la v0.1
+## Qué hay
+
+- **Modo monitor (fase 1)**: 98 tiras reales de parada y periparada anotadas por expertos (vfdb, cudb, MIT-BIH), con barrido, ganancia, compresiones torácicas hasta la pausa de análisis y pregunta de ritmo + conducta (descarga, cardioversión sincronizada, RCP y adrenalina, o no descargar) según la situación.
 
 - **158 ECG reales** de PTB-XL (500 Hz → 250 Hz), 22 diagnósticos en 4 grupos (ritmo, conducción, isquemia, otros). Cada ECG se eligió con doble concordancia: etiqueta del cardiólogo (PTB-XL, validada) + interpretación de GE 12SL (PTB-XL+) + medidas (FC, PR, QRS, QTc, desnivel del ST). Los SCACEST exigen estadio agudo o «STEMI» de 12SL, elevación medida y, en el inferior, especular en aVL.
 - **Artefacto extrahospitalario** generado en cada electrodo (RA, LA, LL, V1–V6) y proyectado a las derivaciones: respiración, línea de base, tensión muscular, temblor de 4–7 Hz (pseudoflutter), 50 Hz, vibración, electrodos que se mueven o despegan. Un temblor del brazo izquierdo sale en I, III y aVL y respeta II. Escenas: Limpio, Domicilio, Ambulancia, Hostil, Aleatorio.

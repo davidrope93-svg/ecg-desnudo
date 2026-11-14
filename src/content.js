@@ -181,3 +181,65 @@ const CODES = {
 const STAGES = { 'Stadium I': 'fase aguda', 'Stadium I-II': 'fase aguda-subaguda', 'Stadium II': 'fase subaguda', 'Stadium II-III': 'fase subaguda-crónica', 'Stadium III': 'fase crónica' };
 
 if (typeof module !== 'undefined') module.exports = { GROUPS, CATS, CODES, STAGES };
+
+/* ---------- Modo monitor (fase 1) ----------
+   Ritmos de parada y periparada en tira de monitor. Conducta según ERC 2025 (SVA adulto y arritmias periparada). */
+const MON_CATS = {
+  fv: {
+    name: 'Fibrilación ventricular',
+    claves: ['Ondulaciones caóticas, irregulares en amplitud, forma y frecuencia', 'Sin QRS, ST ni T identificables', 'Gruesa o fina: la amplitud cae con el tiempo de parada'],
+    trampa: 'El artefacto de compresiones y de movimiento imita una FV: analiza solo en la pausa. La FV fina parece asistolia a ×1: sube la ganancia y mira otra derivación antes de decidir.',
+    sva: 'Desfibrilable. ERC 2025: descarga en cuanto se identifica, también si es fina. Primera descarga bifásica ≥ 150 J (130–150 J si es pulsada) y RCP 2 min sin comprobar pulso. Adrenalina 1 mg y amiodarona 300 mg tras la 3.ª descarga. FV refractaria tras 3 descargas: considera cambiar los parches a posición anteroposterior.',
+  },
+  flv: {
+    name: 'Flutter ventricular',
+    claves: ['Onda sinusoidal regular y muy rápida, en torno a 300/min', 'No se distinguen QRS, ST ni T', 'Suele degenerar en FV'],
+    trampa: 'Se confunde con una TV muy rápida. Sin pulso da igual el nombre: las dos se desfibrilan.',
+    sva: 'Desfibrilable: igual que la FV (ERC 2025).',
+  },
+  tv: {
+    name: 'TV monomorfa',
+    claves: ['QRS ancho (≥ 120 ms), regular y de morfología uniforme', 'Frecuencia > 100 lpm, a menudo 150–250', 'Si se ven: disociación AV, latidos de captura y de fusión'],
+    trampa: 'El monitor no te dice si hay pulso: compruébalo. Sin pulso se desfibrila; con pulso y signos adversos se cardiovierte sincronizada. Una TV muy rápida y sinusoidal se confunde con flutter ventricular.',
+    sva: 'Sin pulso: como la FV. Con pulso y signos adversos: cardioversión sincronizada, primera descarga 120–150 J con aumentos escalonados; si fracasa, amiodarona 300 mg IV en 10–20 min y nuevo intento (ERC 2025). Sedoanalgesia si está consciente.',
+  },
+  asis: {
+    name: 'Asistolia',
+    claves: ['Sin actividad eléctrica ventricular', 'Línea casi plana con ligera ondulación de la línea de base', 'Puede haber ondas P sin QRS (parada ventricular)'],
+    trampa: 'Antes de llamarla asistolia: electrodos y cables conectados, ganancia ×2–×4 y otra derivación. Busca ondas P: la parada ventricular puede responder al marcapasos (ERC 2025). Una FV fina claramente identificada se desfibrila.',
+    sva: 'No desfibrilable: RCP de calidad, adrenalina 1 mg lo antes posible y cada 3–5 min, y causas reversibles (4H y 4T).',
+  },
+  riva: {
+    name: 'RIVA',
+    claves: ['QRS ancho y regular, de origen ventricular', 'Más rápido que un escape ventricular (20–40 lpm) y más lento que una TV', 'Inicio y fin graduales, a menudo con latidos de fusión'],
+    trampa: 'No es una TV: es típico de la reperfusión (tras ICP, fibrinólisis o RCE) y suele ser bien tolerado y autolimitado.',
+    sva: 'No se trata con antiarrítmicos ni se cardiovierte: monitorizar. Si no hay pulso, es una AESP.',
+  },
+  bigem: {
+    name: 'Bigeminismo ventricular',
+    claves: ['Cada latido sinusal va seguido de una extrasístole ventricular', 'EV ancha y prematura, con pausa compensadora', 'Alternancia 1:1 mantenida'],
+    trampa: 'Las EV pueden no generar pulso eficaz: el pulso palpado puede ser la mitad de la FC que marca el monitor.',
+    sva: 'No desfibrilable. Busca la causa: isquemia, hipopotasemia, hipomagnesemia, fármacos, hipoxia. Monitorización continua.',
+  },
+  sinusal: {
+    name: 'Ritmo sinusal',
+    claves: ['QRS estrecho y regular', 'Onda P delante de cada QRS', 'Frecuencia 60–100 lpm'],
+    trampa: 'Un ritmo organizado en el monitor no garantiza pulso. Sin pulso es una AESP: no desfibrilable.',
+    sva: 'AESP: RCP, adrenalina 1 mg lo antes posible, causas reversibles y ecografía en las pausas. Con pulso: tratamiento según el cuadro clínico.',
+  },
+};
+const CONDUCTAS = {
+  descarga: 'Desfibrilar (descarga no sincronizada) y RCP 2 min',
+  cardioversion: 'Cardioversión eléctrica sincronizada',
+  rcp_adr: 'RCP 2 min y adrenalina 1 mg, sin descarga',
+  observar: 'No descargar: monitorizar y tratar la causa',
+};
+const CONTEXTOS = {
+  parada: 'Inconsciente, no respira con normalidad y sin pulso central. RCP en curso: pausa para analizar el ritmo.',
+  inestable: 'Consciente, con pulso. TAS 75 mmHg, frío, sudoroso y con dolor torácico.',
+  pulso: 'Consciente y con pulso. TA 120/75 mmHg, buena perfusión.',
+};
+const CONTEXTO_RIVA = 'SCACEST en tratamiento: con pulso, TA 115/70 mmHg y buena perfusión.';
+const CONDUCTA_OK = { fv: { parada: 'descarga' }, flv: { parada: 'descarga' }, tv: { parada: 'descarga', inestable: 'cardioversion' }, asis: { parada: 'rcp_adr' }, riva: { pulso: 'observar' }, bigem: { pulso: 'observar' }, sinusal: { parada: 'rcp_adr', pulso: 'observar' } };
+
+if (typeof module !== 'undefined') module.exports.MON = { MON_CATS, CONDUCTAS, CONTEXTOS, CONDUCTA_OK };

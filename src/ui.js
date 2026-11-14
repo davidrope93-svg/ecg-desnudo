@@ -24,6 +24,8 @@ async function loadBank() {
   const ds = new DecompressionStream('gzip');
   const buf = await new Response(new Blob([bin]).stream().pipeThrough(ds)).arrayBuffer();
   BYTES = new Uint8Array(buf);
+  const mb = Uint8Array.from(atob(MON_BLOB), (c) => c.charCodeAt(0));
+  MON_BYTES = new Uint8Array(await new Response(new Blob([mb]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
 }
 
 /* ---------- Estado guardado ---------- */
@@ -313,9 +315,10 @@ function home() {
   const rerender = () => { save(); home(); };
   mount(
     h('div', { class: 'hero' }, h('h2', {}, 'Electros reales, sin contexto y con el ruido de la calle.'),
-      h('p', {}, ECG_META.length + ' ECG de 12 derivaciones validados por cardiólogos, ' + Object.keys(CATS).length + ' diagnósticos y artefacto extrahospitalario simulado electrodo a electrodo. Míralo, mide con el compás y decide.')),
+      h('p', {}, ECG_META.length + ' ECG de 12 derivaciones validados por cardiólogos, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
     h('div', { class: 'grid3' },
       h('button', { class: 'mode primary', onclick: () => practice(false) }, h('b', {}, 'Práctica'), h('span', { class: 'muted' }, 'Un ECG tras otro, con la explicación al responder. Insiste en lo que más fallas.')),
+      h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'FV, TV, asistolia y más en tira de monitor real. Ritmo y conducta: ¿descargo o no?')),
       h('button', { class: 'mode', onclick: exam }, h('b', {}, 'Examen · 10 ECG'), h('span', { class: 'muted' }, 'Sin pistas ni corrección hasta el final. Nota y tiempo.')),
       h('button', { class: 'mode', onclick: atlas }, h('b', {}, 'Atlas'), h('span', { class: 'muted' }, 'Cada diagnóstico con sus criterios, trampas y todos sus ejemplos.'))),
     h('div', { class: 'sec-title' }, 'Ajustes'),
@@ -453,7 +456,11 @@ function atlas() {
     ...Object.entries(GROUPS).map(([g, gn]) => [h('div', { class: 'sec-title' }, gn), h('div', { class: 'atlas' }, Object.keys(CATS).filter((c) => CATS[c].g === g).map((c) => {
       const n = ECG_META.filter((m) => m.c === c).length, s = S.stats[c];
       return h('button', { onclick: () => atlasCat(c, 0) }, h('b', {}, CATS[c].name), h('small', {}, n + ' ejemplos' + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : '')));
-    }))]).flat());
+    }))]).flat(),
+    h('div', { class: 'sec-title' }, 'Monitor'), h('div', { class: 'atlas' }, Object.keys(MON_CATS).map((c) => {
+      const n = MON_META.filter((m) => m.c === c).length, s = S.stats['m_' + c];
+      return h('button', { onclick: () => atlasMon(c, 0) }, h('b', {}, MON_CATS[c].name), h('small', {}, n + ' tiras' + (s && s.n ? ' · ' + Math.round(100 * s.ok / s.n) + ' % acierto' : '')));
+    })));
 }
 let atlasNoise = 'limpio';
 function atlasCat(c, k) {
@@ -484,8 +491,277 @@ function stats() {
       Object.keys(CATS).filter((c) => CATS[c].g === g).map((c) => {
         const s = S.stats[c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
         return h('div', { class: 'stat' }, h('span', {}, CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
-      })]).flat()),
+      })]).flat(),
+      h('div', { class: 'sec-title', style: 'margin-top:8px' }, 'Monitor'),
+      Object.keys(MON_CATS).map((c) => {
+        const s = S.stats['m_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
+        return h('div', { class: 'stat' }, h('span', {}, MON_CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
+      })),
     h('div', { class: 'next', style: 'margin-top:14px' }, reset, h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'), h('button', { class: 'btn', onclick: () => practice(false) }, 'Practicar')));
+}
+
+
+/* ---------- Modo monitor (fase 1) ---------- */
+let MON_BYTES = null;
+const MCACHE = new Map();
+const monSig = (i) => { if (!MCACHE.has(i)) MCACHE.set(i, decodeRecord(MON_BYTES, MON_META[i].o, ECG_N, 1)[0]); return MCACHE.get(i); };
+const MSRC = { vfdb: 'MIT-BIH Malignant Ventricular Ectopy', cudb: 'CU Ventricular Tachyarrhythmia', mitdb: 'MIT-BIH Arrhythmia' };
+const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+function describeMonNoise(P) {
+  if (!P || P.level === 'limpio') return 'Tira limpia.';
+  const o = [];
+  if (P.cpr) o.push('compresiones torácicas durante los primeros ' + fmt(P.cpr, 1) + ' s: no se analiza hasta la pausa');
+  if (P.vib) o.push('vibración del vehículo');
+  if (P.pops) o.push('movimiento de parches o cables (saltos de la línea de base)');
+  if (P.emg) o.push('tensión muscular');
+  if (P.wander >= 0.1) o.push('línea de base inestable');
+  return o.length ? o.join('; ') + '.' : 'Artefacto leve.';
+}
+function makeMonitor(opt = {}) {
+  const st = { idx: -1, x: null, clean: null, showClean: false, gain: 1, pos: 0, frozen: false, raf: 0, t0: 0, cal: false, c: null, lay: null };
+  const cv = h('canvas'), ov = h('canvas', { class: 'ov' });
+  const wrap = h('div', { class: 'monwrap' }, cv, ov);
+  const gains = [0.5, 1, 2, 4];
+  const gBtns = gains.map((g) => h('button', { class: 'tool', onclick: () => { st.gain = g; draw(); } }, '×' + fmt(g, g % 1 ? 1 : 0)));
+  const bFreeze = h('button', { class: 'tool', onclick: () => { if (st.frozen) replay(); else freeze(); } }, 'Congelar');
+  const bCal = h('button', { class: 'tool', onclick: () => { if (!st.frozen) freeze(); st.cal = !st.cal; if (!st.cal) st.c = null; sync(); drawOv(); } }, 'Compás');
+  const bClean = h('button', { class: 'tool hidden', onclick: () => { st.showClean = !st.showClean; draw(); } }, 'Ver sin artefacto');
+  const tb = h('div', { class: 'tools' }, h('span', { class: 'small muted' }, 'Ganancia'), ...gBtns, bFreeze, bCal, bClean);
+  const hint = h('div', { class: 'hint hidden' }, 'Compás: arrastra sobre la tira para medir intervalo y amplitud (la amplitud se corrige según la ganancia).');
+  const el = h('div', {}, tb, wrap, hint);
+  function sync() {
+    gBtns.forEach((b, i) => b.classList.toggle('on', gains[i] === st.gain));
+    bFreeze.textContent = st.frozen ? 'Repetir barrido' : 'Congelar';
+    bCal.classList.toggle('on', st.cal); bClean.classList.toggle('on', st.showClean);
+    ov.style.pointerEvents = st.cal ? 'auto' : 'none'; ov.style.touchAction = st.cal ? 'none' : 'auto';
+    hint.classList.toggle('hidden', !st.cal);
+  }
+  function layout() {
+    const W0 = wrap.clientWidth || Math.min(window.innerWidth - 24, 1150);
+    const rows = W0 < 640 ? 2 : 1, secs = 10 / rows, Wmm = 8 + secs * 25 + 4, RH = 46;
+    const s = W0 / Wmm, H = 8 + rows * RH;
+    return { rows, secs, Wmm, RH, s, Hmm: H };
+  }
+  function draw() {
+    if (st.idx < 0) return;
+    sync();
+    const L = st.lay = layout(), s = L.s;
+    const W = Math.round(L.Wmm * s), H = Math.round(L.Hmm * s);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    for (const c of [cv, ov]) { c.style.width = W + 'px'; c.style.height = H + 'px'; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    st.dpr = dpr;
+    const g = cv.getContext('2d');
+    g.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
+    const px = 1 / (s * dpr);
+    g.fillStyle = '#04110a'; g.fillRect(0, 0, L.Wmm, L.Hmm);
+    g.beginPath(); g.lineWidth = px; g.strokeStyle = '#0f2e1d';
+    for (let x = 8; x <= L.Wmm - 4 + 0.01; x += 5) { g.moveTo(x, 8); g.lineTo(x, L.Hmm); }
+    for (let r = 0; r < L.rows; r++) for (let y = 8 + r * L.RH + 3; y <= 8 + (r + 1) * L.RH - 3; y += 5) { g.moveTo(8, y); g.lineTo(L.Wmm - 4, y); }
+    g.stroke();
+    g.fillStyle = '#7dd9a0'; g.font = 'bold 3.2px -apple-system,Segoe UI,Roboto,Arial,sans-serif'; g.textBaseline = 'middle';
+    const m = MON_META[st.idx];
+    g.fillText((m.lead === 'MLII' ? 'II' : 'ECG') + '   ×' + fmt(st.gain, st.gain % 1 ? 1 : 0) + '   25 mm/s   Filtro monitor 0,5–40 Hz' + (st.showClean ? '   SIN ARTEFACTO' : ''), 2, 4);
+    const sig = applyFilters([st.showClean ? st.clean : st.x], { mode: 'mon', notch: false }, ECG_FS)[0];
+    const upto = st.frozen ? ECG_N : Math.min(ECG_N, Math.floor(st.pos));
+    const perRow = ECG_N / L.rows, k = 10 * st.gain;
+    g.strokeStyle = '#3cf08a'; g.lineWidth = Math.max(px * 1.6, 0.28); g.lineJoin = 'round';
+    for (let r = 0; r < L.rows; r++) {
+      const top = 8 + r * L.RH, y0 = top + L.RH * 0.55;
+      g.save(); g.beginPath(); g.rect(0, top, L.Wmm, L.RH); g.clip();
+      g.beginPath();
+      const i0 = r * perRow, i1 = Math.min(upto, (r + 1) * perRow);
+      for (let i = i0; i < i1; i++) { const x = 8 + (i - i0) * 0.1, y = y0 - sig[i] * k; i === i0 ? g.moveTo(x, y) : g.lineTo(x, y); }
+      g.stroke(); g.restore();
+      // calibración 1 mV
+      g.beginPath(); g.lineWidth = Math.max(px, 0.18); g.strokeStyle = '#2a8a55';
+      g.moveTo(2, y0); g.lineTo(3, y0); g.lineTo(3, y0 - k); g.lineTo(6, y0 - k); g.lineTo(6, y0); g.lineTo(7, y0); g.stroke();
+      g.strokeStyle = '#3cf08a'; g.lineWidth = Math.max(px * 1.6, 0.28);
+    }
+    if (!st.frozen) { // barra de borrado del barrido
+      const r = Math.min(L.rows - 1, Math.floor(upto / perRow)), x = 8 + (upto - r * perRow) * 0.1;
+      g.fillStyle = '#04110a'; g.fillRect(x, 8 + r * L.RH, 3, L.RH);
+    }
+    drawOv();
+  }
+  function drawOv() {
+    const g = ov.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, ov.width, ov.height);
+    if (!st.cal || !st.c || !st.lay) return;
+    const s = st.lay.s, dpr = st.dpr, px = 1 / (s * dpr);
+    g.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
+    const { x1, y1, x2, y2 } = st.c;
+    g.strokeStyle = '#ffd34d'; g.fillStyle = '#ffd34d'; g.lineWidth = Math.max(px * 1.6, 0.25);
+    g.beginPath(); g.moveTo(x1, y1 - 6); g.lineTo(x1, y1 + 6); g.moveTo(x2, y2 - 6); g.lineTo(x2, y2 + 6); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    const ms = Math.abs(x2 - x1) / 25 * 1000, mv = (y1 - y2) / (10 * st.gain);
+    const t = Math.round(ms) + ' ms' + (ms > 150 ? ' · ' + Math.round(60000 / ms) + ' lpm' : '') + ' · ' + (mv >= 0 ? '+' : '') + fmt(mv, 2) + ' mV';
+    g.font = 'bold 3px -apple-system,Segoe UI,Roboto,Arial,sans-serif';
+    const tw = g.measureText(t).width + 3;
+    let lx = Math.max(1, Math.min(st.lay.Wmm - tw - 1, (x1 + x2) / 2 - tw / 2)), ly = Math.min(y1, y2) - 11; if (ly < 1) ly = Math.max(y1, y2) + 4;
+    g.fillStyle = 'rgba(4,17,10,.9)'; g.fillRect(lx, ly, tw, 5); g.fillStyle = '#ffd34d'; g.textBaseline = 'middle'; g.fillText(t, lx + 1.5, ly + 2.6);
+  }
+  let drag = null;
+  const mm = (e) => { const b = ov.getBoundingClientRect(); return { x: (e.clientX - b.left) / st.lay.s, y: (e.clientY - b.top) / st.lay.s }; };
+  ov.addEventListener('pointerdown', (e) => {
+    if (!st.cal) return; const p = mm(e); ov.setPointerCapture(e.pointerId);
+    if (st.c && Math.abs(p.x - st.c.x1) < 2.5) drag = 1; else if (st.c && Math.abs(p.x - st.c.x2) < 2.5) drag = 2; else { st.c = { x1: p.x, y1: p.y, x2: p.x, y2: p.y }; drag = 2; }
+    e.preventDefault();
+  });
+  ov.addEventListener('pointermove', (e) => { if (!drag) return; const p = mm(e); if (drag === 1) { st.c.x1 = p.x; st.c.y1 = p.y; } else { st.c.x2 = p.x; st.c.y2 = p.y; } drawOv(); });
+  const end = () => { drag = null; }; ov.addEventListener('pointerup', end); ov.addEventListener('pointercancel', end);
+  function loop(ts) {
+    if (!st.t0) st.t0 = ts;
+    st.pos = (ts - st.t0) / 1000 * ECG_FS;
+    if (st.pos >= ECG_N) { freeze(); return; }
+    draw(); st.raf = requestAnimationFrame(loop);
+  }
+  function freeze() { cancelAnimationFrame(st.raf); st.frozen = true; draw(); }
+  function replay() { cancelAnimationFrame(st.raf); st.frozen = false; st.cal = false; st.c = null; st.t0 = 0; st.pos = 0; st.raf = requestAnimationFrame(loop); }
+  const ro = new ResizeObserver(() => { if (Math.abs((wrap.clientWidth || 0) - (st.lastW || 0)) > 8) { st.lastW = wrap.clientWidth; draw(); } });
+  ro.observe(wrap);
+  return {
+    el,
+    set(idx, seed, level, ctx, sweep = true) {
+      st.idx = idx; st.showClean = false; st.cal = false; st.c = null; st.gain = 1;
+      st.clean = monSig(idx);
+      const m = monitorStrip(st.clean, level, ctx, seed); st.x = m.x; st.P = m.P;
+      bClean.classList.toggle('hidden', !opt.allowClean || m.P.level === 'limpio');
+      if (sweep) replay(); else { st.frozen = true; requestAnimationFrame(draw); }
+    },
+    allowClean(v) { opt.allowClean = v; bClean.classList.toggle('hidden', !v || !st.P || st.P.level === 'limpio'); },
+    noise() { return st.P; },
+    destroy() { cancelAnimationFrame(st.raf); ro.disconnect(); },
+  };
+}
+const ctxText = (m, ctx) => m.c === 'riva' ? CONTEXTO_RIVA : CONTEXTOS[ctx];
+function monFeedback(m, ctx, res, rAns, kAns, P) {
+  const C = MON_CATS[m.c], okK = CONDUCTA_OK[m.c][ctx];
+  const V = res ? (res.g === 'ok' ? 'Correcto: ritmo y conducta' : res.rOk ? 'Ritmo correcto, conducta no' : res.kOk ? 'Conducta correcta, ritmo no' : 'Ni ritmo ni conducta') : 'Monitor';
+  return h('div', { class: 'fb' },
+    h('div', { class: 'verdict ' + (res ? res.g : 'info') }, V),
+    h('div', { class: 'body' },
+      h('div', {}, h('h3', {}, C.name), m.acc.length ? h('div', { class: 'small muted' }, 'La base de datos no distingue FV de flutter ventricular en este registro: valen las dos.') : null,
+        rAns && !res.rOk ? h('div', { class: 'small muted' }, 'Tu ritmo: ' + MON_CATS[rAns].name) : null),
+      h('div', {}, h('h4', {}, 'Situación y conducta'), h('div', { class: 'small' }, ctxText(m, ctx)),
+        h('div', { style: 'margin-top:6px' }, h('b', {}, 'Conducta: '), CONDUCTAS[okK]), kAns && kAns !== okK ? h('div', { class: 'small muted' }, 'Tu conducta: ' + CONDUCTAS[kAns]) : null),
+      h('div', {}, h('h4', {}, 'En esta tira'),
+        h('div', { class: 'facts' }, h('span', {}, 'Amplitud ' + fmt(m.p2p, 1) + ' mV (' + Math.round(m.p2p * 10) + ' mm a ×1)'), h('span', {}, MSRC[m.db] + ' · registro ' + m.rec + ' · ' + mmss(m.t0))),
+        P ? h('div', { class: 'small muted', style: 'margin-top:4px' }, h('b', {}, 'Artefacto: '), describeMonNoise(P)) : null),
+      h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
+      h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
+      h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
+      h('div', { class: 'src' }, 'Episodio anotado por expertos en ' + MSRC[m.db] + ' (PhysioNet) · artefacto simulado')));
+}
+function monAnswer(onDone, submitLabel) {
+  let r = null, k = null;
+  const rB = Object.keys(MON_CATS).map((c) => h('button', { class: 'opt', 'data-c': c, onclick: () => { r = c; rB.forEach((b) => b.classList.toggle('sel', b === rB[Object.keys(MON_CATS).indexOf(c)])); go.disabled = !(r && k); } }, MON_CATS[c].name));
+  const kB = Object.keys(CONDUCTAS).map((c) => h('button', { class: 'opt', 'data-c': c, onclick: () => { k = c; kB.forEach((b) => b.classList.toggle('sel', b.dataset.c === c)); go.disabled = !(r && k); } }, CONDUCTAS[c]));
+  const go = h('button', { class: 'btn', disabled: true, onclick: () => { go.disabled = true; onDone(r, k, rB, kB); } }, submitLabel);
+  return { el: h('div', { class: 'answers' }, h('div', { class: 'sec-title', style: 'margin-top:4px' }, 'Ritmo'), h('div', { class: 'opts mopts' }, rB),
+    h('div', { class: 'sec-title' }, 'Conducta'), h('div', { class: 'opts' }, kB), h('div', { class: 'next', style: 'margin-top:12px' }, go)), rB, kB };
+}
+function markMon(rB, kB, m, ctx, rAns, kAns) {
+  const okK = CONDUCTA_OK[m.c][ctx];
+  rB.forEach((b) => { const c = b.dataset.c; b.disabled = true; b.classList.remove('sel'); b.classList.add(c === m.c || m.acc.includes(c) ? 'ok' : c === rAns ? 'bad' : 'dim'); });
+  kB.forEach((b) => { const c = b.dataset.c; b.disabled = true; b.classList.remove('sel'); b.classList.add(c === okK ? 'ok' : c === kAns ? 'bad' : 'dim'); });
+}
+function monRecord(m, res) {
+  const key = 'm_' + m.c, s = S.stats[key] || (S.stats[key] = { n: 0, ok: 0, p: 0 });
+  s.n++; if (res.g === 'ok') s.ok++; if (res.g === 'partial') s.p++; S.total++; save();
+}
+const monStats = () => Object.fromEntries(Object.keys(MON_CATS).map((c) => [c, S.stats['m_' + c]]));
+const pickCtx = (m) => m.ctx[Math.floor(R() * m.ctx.length)];
+function ctxCard(m, ctx) { return h('div', { class: 'ctx' }, h('b', {}, 'Situación: '), ctxText(m, ctx)); }
+
+function monitorPractice() {
+  const sel = new Set(Object.keys(MON_CATS));
+  let deck = [], pos = 0, count = 0, streak = 0;
+  const mon = makeMonitor({ allowClean: false });
+  const bar = h('span', { class: 'pill' }), ctxBox = h('div'), ansBox = h('div'), fbBox = h('div');
+  mount(caseShell([h('span', { class: 'title' }, 'Monitor'), bar, h('button', { class: 'tool', onclick: monitorExam }, 'Examen de 10')]), ctxBox, mon.el, ansBox, fbBox);
+  current = mon;
+  function next() {
+    if (pos >= deck.length) { deck = buildDeck(MON_META, sel, monStats(), R, 20); pos = 0; }
+    const idx = deck[pos++], m = MON_META[idx], ctx = pickCtx(m);
+    count++; bar.textContent = 'Tira ' + count + (streak > 1 ? ' · racha ' + streak : '');
+    ctxBox.replaceChildren(ctxCard(m, ctx));
+    mon.allowClean(false); mon.set(idx, newSeed(), S.settings.noise, ctx);
+    fbBox.replaceChildren();
+    const a = monAnswer((rAns, kAns, rB, kB) => {
+      const res = gradeMon(m, rAns, kAns, ctx);
+      monRecord(m, res); streak = res.g === 'ok' ? streak + 1 : 0;
+      bar.textContent = 'Tira ' + count + (streak > 1 ? ' · racha ' + streak : '');
+      markMon(rB, kB, m, ctx, rAns, kAns); mon.allowClean(true);
+      fbBox.replaceChildren(monFeedback(m, ctx, res, rAns, kAns, mon.noise()), h('div', { class: 'next', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: next }, 'Siguiente tira ›')));
+      fbBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setKeys((e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); next(); } });
+    }, 'Comprobar');
+    ansBox.replaceChildren(a.el); setKeys(null);
+    window.scrollTo({ top: 0 });
+  }
+  next();
+}
+function monitorExam() {
+  const deck = buildDeck(MON_META, new Set(Object.keys(MON_CATS)), {}, R, 10);
+  const Q = deck.map((idx) => ({ idx, seed: newSeed(), ctx: pickCtx(MON_META[idx]), r: null, k: null, res: null }));
+  const t0 = Date.now(); let i = 0;
+  const mon = makeMonitor({ allowClean: false });
+  const bar = h('span', { class: 'pill' }), clock = h('span', { class: 'pill' }), ctxBox = h('div'), ansBox = h('div');
+  mount(caseShell([h('span', { class: 'title' }, 'Examen de monitor'), bar, clock]), ctxBox, mon.el, ansBox);
+  current = mon;
+  const tick = setInterval(() => { const s = Math.floor((Date.now() - t0) / 1000); clock.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }, 500);
+  const d = mon.destroy; mon.destroy = () => { clearInterval(tick); d(); };
+  function show() {
+    const q = Q[i], m = MON_META[q.idx];
+    bar.textContent = (i + 1) + ' / ' + Q.length;
+    ctxBox.replaceChildren(ctxCard(m, q.ctx));
+    mon.set(q.idx, q.seed, S.settings.noise, q.ctx);
+    const a = monAnswer((rAns, kAns) => {
+      q.r = rAns; q.k = kAns; q.res = gradeMon(m, rAns, kAns, q.ctx); q.P = mon.noise(); monRecord(m, q.res);
+      i++; if (i < Q.length) show(); else { clearInterval(tick); monResults(Q, Date.now() - t0); }
+    }, i < Q.length - 1 ? 'Siguiente ›' : 'Terminar');
+    ansBox.replaceChildren(a.el); window.scrollTo({ top: 0 });
+  }
+  show();
+}
+function monResults(Q, ms) {
+  setKeys(null);
+  const sc = Q.reduce((a, q) => a + (q.res.g === 'ok' ? 1 : q.res.g === 'partial' ? 0.5 : 0), 0), s = Math.round(ms / 1000);
+  mount(caseShell([h('span', { class: 'title' }, 'Resultado · monitor')]),
+    h('div', { class: 'card row', style: 'gap:24px' },
+      h('div', {}, h('div', { class: 'big' }, fmt(sc, sc % 1 ? 1 : 0) + ' / ' + Q.length), h('div', { class: 'muted small' }, 'Medio punto si aciertas solo el ritmo o solo la conducta')),
+      h('div', {}, h('div', { class: 'big' }, Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0')), h('div', { class: 'muted small' }, Math.round(s / Q.length) + ' s por tira'))),
+    h('div', { class: 'sec-title' }, 'Revisión'),
+    h('div', { class: 'card', style: 'padding:4px 12px' }, Q.map((q, k) => {
+      const m = MON_META[q.idx];
+      return h('div', { class: 'res', onclick: () => monReview(Q, ms, k) }, h('span', { class: 'dot ' + q.res.g }, q.res.g === 'ok' ? '✓' : q.res.g === 'partial' ? '½' : '✕'),
+        h('div', {}, h('b', {}, (k + 1) + '. ' + MON_CATS[m.c].name), h('div', { class: 'small muted' }, CONDUCTAS[CONDUCTA_OK[m.c][q.ctx]])), h('span', { class: 'small muted' }, 'Ver ›'));
+    })),
+    h('div', { class: 'next', style: 'margin-top:14px' }, h('button', { class: 'btn ghost', onclick: home }, 'Inicio'), h('button', { class: 'btn', onclick: monitorExam }, 'Otro examen')));
+}
+function monReview(Q, ms, k) {
+  const q = Q[k], m = MON_META[q.idx];
+  const mon = makeMonitor({ allowClean: true });
+  mount(h('div', { class: 'casebar' }, h('button', { class: 'tool', onclick: () => monResults(Q, ms) }, '‹ Resultado'), h('span', { class: 'title' }, 'Tira ' + (k + 1) + ' de ' + Q.length)), ctxCard(m, q.ctx), mon.el);
+  current = mon;
+  mon.set(q.idx, q.seed, S.settings.noise, q.ctx, false);
+  const a = monAnswer(() => {}, '');
+  markMon(a.rB, a.kB, m, q.ctx, q.r, q.k);
+  a.el.querySelector('.next').remove();
+  app.append(a.el, monFeedback(m, q.ctx, q.res, q.r, q.k, mon.noise()),
+    h('div', { class: 'next', style: 'margin-top:12px' }, k > 0 ? h('button', { class: 'btn ghost', onclick: () => monReview(Q, ms, k - 1) }, '‹ Anterior') : null, k < Q.length - 1 ? h('button', { class: 'btn', onclick: () => monReview(Q, ms, k + 1) }, 'Siguiente ›') : null));
+}
+function atlasMon(c, k) {
+  const list = MON_META.map((m, i) => [m, i]).filter(([m]) => m.c === c);
+  k = (k + list.length) % list.length;
+  const [m, idx] = list[k], ctx = m.ctx[0];
+  const mon = makeMonitor({ allowClean: true });
+  mount(h('div', { class: 'casebar' }, h('button', { class: 'tool', onclick: atlas }, '‹ Atlas'), h('span', { class: 'title' }, MON_CATS[c].name),
+    h('span', { class: 'pill' }, (k + 1) + ' / ' + list.length), h('button', { class: 'tool', onclick: () => atlasMon(c, k - 1) }, '‹'), h('button', { class: 'tool', onclick: () => atlasMon(c, k + 1) }, '›'),
+    seg(Object.entries(NOISE).filter(([x]) => x !== 'aleatorio').map(([x, v]) => [x, v.name]), atlasNoise, (x) => { atlasNoise = x; atlasMon(c, k); })), mon.el);
+  current = mon;
+  mon.set(idx, hashSeed(m.id, atlasNoise, 'mon'), atlasNoise, ctx, false);
+  app.append(monFeedback(m, ctx, null, null, null, atlasNoise === 'limpio' ? null : mon.noise()));
+  setKeys((e) => { if (e.key === 'ArrowRight') atlasMon(c, k + 1); if (e.key === 'ArrowLeft') atlasMon(c, k - 1); });
 }
 
 document.getElementById('home-link').addEventListener('click', home);

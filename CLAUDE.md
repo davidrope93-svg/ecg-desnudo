@@ -15,7 +15,8 @@ Entrenador de lectura de ECG para SVA extrahospitalaria. Usuario: médico de SVA
 ## Estado
 
 - [x] v0.1: 158 ECG de PTB-XL, 22 diagnósticos, artefacto por electrodo, filtros, compás, práctica, examen, atlas y progreso.
-- [ ] Fase 1 · Modo monitor: FV gruesa y fina, flutter ventricular, TV, asistolia, RIVA y bigeminismo de vfdb, cudb y MIT-BIH. Tira de 8–10 s como en el monitor-desfibrilador, ganancia ×1/×2/×4 (FV fina frente a asistolia), artefacto de compresiones y de traslado. Pregunta: ritmo + ¿desfibrilable? + conducta.
+- [x] Fase 1 · Modo monitor (14/11/2026): 98 tiras reales revisadas una a una (FV 37, TV 17, sinusal 14, flutter ventricular 12, bigeminismo 10, asistolia 4, RIVA 4) de vfdb, cudb y MIT-BIH. Barrido en tiempo real, ganancia ×0,5–×4, congelar, compás, artefacto de compresiones hasta la pausa y de traslado. Pregunta de ritmo + conducta según la situación (parada, con pulso inestable, con pulso). En cudb vale FV o flutter ventricular. Scripts: `tools/monitor_select.py`, `tools/monitor_sheet.py`, `tools/monitor_pack.py`.
+  - Pendiente: ampliar asistolia y RIVA (pocas tiras limpias). RIVA de Chapman/Ningbo (14, derivación II) tras revisión visual. Ojo: al descargar cabeceras de Chapman/Ningbo en paralelo, guardar cada una en su archivo (`curl -o`), no en un único fichero, o se pierde la correspondencia registro-diagnóstico.
 - [ ] Fase 2 · Bloqueos y taquicardias en 12 derivaciones (Chapman/Ningbo, SPH): Mobitz I y II, 2:1, avanzado, unión, TRNAV, TRAV, taquicardia auricular, paro sinusal, FV y TV en 12 derivaciones.
 - [ ] Fase 3 · Oclusión coronaria (STAFF III): por arteria y por minuto de oclusión; circunfleja sin elevación.
 - [ ] Fase 4 · Brugada (Brugada-HUCA), QT por fármacos (ECGRDVQ), FA preexcitada (INCART) e inversión de electrodos (transformación exacta).

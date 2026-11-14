@@ -3,11 +3,11 @@
 const LEADS = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
 
 /* ---------- Banco ---------- */
-function decodeRecord(bytes, off, n) {
+function decodeRecord(bytes, off, n, nl = 8) {
   // 8 derivaciones independientes (I, II, V1–V6): delta + zigzag + varint, unidades de ECG_Q mV
   const out = [];
   let p = off;
-  for (let k = 0; k < 8; k++) {
+  for (let k = 0; k < nl; k++) {
     const a = new Float32Array(n);
     let acc = 0;
     for (let i = 0; i < n; i++) {
@@ -257,4 +257,44 @@ function buildDeck(metaList, sel, stats, r, n) {
   return deck;
 }
 
-if (typeof module !== 'undefined') module.exports = { LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };
+/* ---------- Monitor: artefacto de compresiones y de traslado sobre una sola derivación ---------- */
+function monitorStrip(sig, level, ctx, seed) {
+  const n = sig.length, fs = ECG_FS, r = rng(seed);
+  if (level === 'aleatorio') { const x = r(); level = x < 0.15 ? 'limpio' : x < 0.4 ? 'leve' : x < 0.75 ? 'ambulancia' : 'hostil'; }
+  const P = { level, cpr: 0, wander: 0, vib: 0, pops: 0, emg: 0 };
+  const x = Float32Array.from(sig);
+  if (level === 'limpio') return { x, P };
+  if (level === 'leve') Object.assign(P, { wander: uni(r, 0.03, 0.08) });
+  if (level === 'ambulancia') Object.assign(P, { wander: uni(r, 0.08, 0.2), vib: uni(r, 0.03, 0.06), pops: r() < 0.5 ? 1 : 0 });
+  if (level === 'hostil') Object.assign(P, { wander: uni(r, 0.15, 0.35), vib: uni(r, 0.05, 0.1), pops: 1 + Math.floor(r() * 3), emg: ctx === 'parada' ? 0 : uni(r, 0.02, 0.05) });
+  if (ctx === 'parada') {
+    // compresiones a 100–120/min hasta la pausa de análisis; al parar queda un desplazamiento que se recupera
+    P.cpr = level === 'hostil' ? uni(r, 3, 5.5) : uni(r, 2, 4);
+    const f = uni(r, 100, 120) / 60, A = uni(r, 0.6, 1.8), stop = Math.floor(P.cpr * fs);
+    let ph = r(), amp = A, off = 0;
+    for (let i = 0; i < stop; i++) {
+      const prev = ph; ph += f / fs;
+      if (ph >= 1) { ph -= 1; amp = A * uni(r, 0.8, 1.2); }
+      const g = ph < 0.45 ? Math.pow(Math.sin(Math.PI * ph / 0.45), 2) : -0.3 * Math.pow(Math.sin(Math.PI * (ph - 0.45) / 0.55), 2);
+      x[i] += amp * g; off = amp * g;
+      if (prev > ph) off = 0;
+    }
+    const tau = 0.4 * fs, step = uni(r, -0.4, 0.4);
+    for (let i = stop; i < n; i++) x[i] += (off + step) * Math.exp(-(i - stop) / tau);
+  }
+  const fr = uni(r, 0.15, 0.35), ph0 = r() * 6.28, wd = smoothNoise(r, n, fs, 0.3);
+  for (let i = 0; i < n; i++) x[i] += P.wander * (0.6 * Math.sin(2 * Math.PI * fr * i / fs + ph0) + wd[i]);
+  if (P.vib) { const env = envelope(r, n, fs, 0.35, 0.4), v = smoothNoise(r, n, fs, 15); for (let i = 0; i < n; i++) x[i] += P.vib * env[i] * v[i]; }
+  if (P.emg) { const env = envelope(r, n, fs, 0.6, 0.3); let prev = 0; for (let i = 0; i < n; i++) { const w = gauss(r); x[i] += P.emg * env[i] * (w - 0.5 * prev); prev = w; } }
+  for (let k = 0; k < P.pops; k++) {
+    const i0 = Math.floor(uni(r, P.cpr * fs, n - 50)), amp = uni(r, 0.3, 1.2) * (r() < 0.5 ? -1 : 1), tau = uni(r, 0.15, 0.6) * fs;
+    for (let i = i0; i < n; i++) x[i] += amp * Math.exp(-(i - i0) / tau);
+  }
+  return { x, P };
+}
+function gradeMon(meta, rAns, kAns, ctx) {
+  const rOk = rAns === meta.c || meta.acc.includes(rAns), kOk = kAns === CONDUCTA_OK[meta.c][ctx];
+  return { rOk, kOk, g: rOk && kOk ? 'ok' : rOk || kOk ? 'partial' : 'bad' };
+}
+
+if (typeof module !== 'undefined') module.exports = { monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };
