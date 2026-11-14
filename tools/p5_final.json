@@ -20,8 +20,8 @@
   "c": "hiperk",
   "src": "Hyperkalemia ECG.jpg",
   "autor": "Michael-Joseph F. Agbayani y Eddieson Gonzales (Manila)",
-  "nota": "T altas, picudas y simétricas en V2–V6, II y aVF, con P apenas visibles. Las marcas sobre la tira de ritmo son del autor original.",
-  "ctx": "Paciente con enfermedad renal y K+ 8,2 mmol/L."
+  "nota": "T altas, picudas y simétricas en V2–V6, II y aVF, con P apenas visibles. K+ 8,2 mmol/L según la fuente. Las marcas sobre la tira de ritmo son del autor original.",
+  "ctx": "Paciente con enfermedad renal."
  },
  {
   "id": "hipok_1",
@@ -59,8 +59,8 @@
   "c": "wellens",
   "src": "Wellens' Syndrome.png",
   "autor": "Jer5150",
-  "nota": "T negativas, profundas y simétricas en V2–V4, con R conservada: Wellens tipo B.",
-  "ctx": "Varón de 69 años sin cardiopatía conocida. En el cateterismo, estenosis crítica (95 %) de la DA proximal."
+  "nota": "T negativas, profundas y simétricas en V2–V4, con R conservada: Wellens tipo B. En el cateterismo, estenosis crítica (95 %) de la DA proximal.",
+  "ctx": "Varón de 69 años sin cardiopatía conocida."
  },
  {
   "id": "wellens_3",
@@ -132,8 +132,7 @@
   "c": "taponamiento",
   "src": "Electrical Alternans.JPG",
   "autor": "James Heilman, MD",
-  "nota": "Taquicardia sinusal con bajo voltaje y alternancia eléctrica: la amplitud del QRS cambia latido a latido, mejor visible en las precordiales y en la tira de II.",
-  "ctx": "Derrame pericárdico grande.",
+  "nota": "Taquicardia sinusal con bajo voltaje y alternancia eléctrica: la amplitud del QRS cambia latido a latido, mejor visible en las precordiales y en la tira de II. Derrame pericárdico grande según la fuente.",
   "sec": [
    "taqui"
   ]
@@ -143,8 +142,8 @@
   "c": "taponamiento",
   "src": "PulsusAlternans (CardioNetworks ECHOpedia).jpg",
   "autor": "J.S.S.G. de Jong (AMC, Ámsterdam), vía CardioNetworks/ECHOpedia",
-  "nota": "Taquicardia sinusal con QRS pequeños y alternancia eléctrica.",
-  "ctx": "Varón de 40 años con mieloma múltiple y taponamiento cardiaco.",
+  "nota": "Taquicardia sinusal con QRS pequeños y alternancia eléctrica, en un taponamiento cardiaco según la fuente.",
+  "ctx": "Varón de 40 años con mieloma múltiple.",
   "sec": [
    "taqui"
   ]
@@ -185,6 +184,14 @@
   "autor": "CardioNetworks/ECGpedia (Drj)",
   "origen": "copia descargada de ECGpedia",
   "nota": "ST largo y rectilíneo seguido de una T de forma normal (mírala en V2–V3): el QT se alarga a expensas del ST."
+ },
+ {
+  "id": "hipoca_2",
+  "c": "hipoca",
+  "src": "ECG Hypocalcemia.jpg",
+  "autor": "Ewingdo",
+  "nota": "Taquicardia sinusal con QT largo a expensas de un ST largo y rectilíneo, con T de forma normal. QTc 584 ms y calcio 5,3 mg/dL según la fuente.",
+  "ctx": "Varón de 47 años."
  },
  {
   "id": "hsa_1",

@@ -79,6 +79,15 @@ for m in [m for m in meta if m['c'] == 'normal'][:8]:
     inv = dict(m); inv.update(id='inv-%s' % m['id'], c='inv_brazos', xf='brazos', ax=None, ste=[], std=[], avr=0, k=[], sec=[],
                               rep=['ECG normal (PTB-XL n.º %s) con los electrodos de brazo derecho y brazo izquierdo intercambiados' % m['id']])
     meta.append(inv)
+# Fase 7 · Otras inversiones de los miembros (misma transformación exacta). Brazo izq. ↔ pierna izq.: normales con eje ≥ 30° (P y QRS mayores en II que en I)
+NORM = [m for m in meta if m['c'] == 'normal' and not m.get('xf')]
+XF = [('mi_pi', 'inv_mi_pi', 'brazo izquierdo y pierna izquierda', [m for m in NORM if (m['ax'] or 0) >= 30][:8]),
+      ('md_pi', 'inv_md_pi', 'brazo derecho y pierna izquierda', [m for m in NORM if (m['ax'] or 0) < 30][:6] + [m for m in NORM if (m['ax'] or 0) >= 30][-2:])]
+for xf, c, txt, base in XF:
+    for m in base:
+        inv = dict(m); inv.update(id='%s-%s' % (xf, m['id']), c=c, xf=xf, ax=None, ste=[], std=[], avr=0, k=[], sec=[],
+                                  rep=['ECG normal (PTB-XL n.º %s) con los electrodos de %s intercambiados' % (m['id'], txt)])
+        meta.append(inv)
 gz = gzip.compress(bytes(blob), 9)
 b64 = base64.b64encode(gz).decode()
 print('records', len(meta), 'raw varint', len(blob), 'gzip', len(gz), 'b64', len(b64))

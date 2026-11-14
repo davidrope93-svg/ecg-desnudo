@@ -8,6 +8,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 ## Qué hay
 
+- **Cables (fase 7)**: además de brazo derecho ↔ brazo izquierdo, las inversiones brazo izquierdo ↔ pierna izquierda (la que más pasa desapercibida) y brazo derecho ↔ pierna izquierda, por transformación exacta de ECG normales reales.
 - **Monitor periparada (fase 6)**: 54 tiras nuevas (TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas) con su conducta según el ERC 2025: cardioversión sincronizada, vagales y adenosina, control de FC, atropina, o marcapasos y perfusión si el BAV tiene QRS ancho. El monitor tiene ya 156 tiras y 13 ritmos.
 - **Imagen · casos clásicos (fase 5)**: 22 ECG reales en imagen de Wikimedia Commons (CC BY y CC BY-SA) para lo que no existe en señal: hiperpotasemia, hipopotasemia, hipocalcemia, hipotermia, Wellens (con el ECG del mismo paciente con dolor), de Winter, pericarditis, TEP, taponamiento con alternancia eléctrica, IAM con BRI (Sgarbossa), IAM posterior, dextrocardia y hemorragia subaracnoidea que imita un SCACEST. Zoom por toque, autor y licencia en cada imagen.
 - **Fase 4**: Brugada tipo 1 espontáneo (Brugada-HUCA), QT largo por quinidina y dofetilida (ECGRDVQ), FA preexcitada (INCART) e inversión de electrodos de los brazos (transformación exacta de ECG normales).
@@ -33,7 +34,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 206 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 216 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```

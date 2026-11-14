@@ -208,5 +208,25 @@ t('fase 6: BAV sin pulso = AESP (RCP y adrenalina)', BV.every((m) => !m.ctx.incl
 t('fase 6: las tiras periparada no se ofrecen en parada salvo los BAV', M6.filter((m) => ['tsv', 'fa', 'flutter', 'bradi'].includes(m.c)).every((m) => !m.ctx.includes('parada')));
 t('fase 6: tiras de 10 s sin valores imposibles', (() => { const B6 = new Uint8Array(zlib.gunzipSync(Buffer.from(E('MON_BLOB'), 'base64'))); return M6.filter((m) => P6.includes(m.c)).every((m) => { const x = decodeRecord(B6, m.o, N, 1)[0]; return x.length === 2500 && x.every((v) => isFinite(v) && Math.abs(v) < 6); }); })());
 t('fase 6: dosis periparada en mcg (nunca µg ni UI)', P6.every((c) => !/µg|\bUI\b/.test(MC[c].sva + MC[c].trampa)));
+
+// 15. Fase 7: otras inversiones de los miembros (transformación exacta)
+const lim = (xf) => META.map((m, i) => [m, i]).filter(([m]) => m.xf === xf);
+const twelve = (r) => twelveFrom(r[0], r[1], r.slice(2));
+const eqL = (x, y, s = 1) => x.every((v, j) => Math.abs(v - s * y[j]) < 1e-5);
+let okMI = lim('mi_pi').length >= 5, okMD = lim('md_pi').length >= 5;
+for (const [m, i] of lim('mi_pi')) {
+  const a = twelve(rec(META.findIndex((x) => x.c === 'normal' && !x.xf && x.o === m.o))), b = twelve(applyXf(rec(i), 'mi_pi'));
+  // LA↔LL: I↔II, III → −III, aVR igual, aVL↔aVF, precordiales iguales
+  if (!(eqL(b[0], a[1]) && eqL(b[1], a[0]) && eqL(b[2], a[2], -1) && eqL(b[3], a[3]) && eqL(b[4], a[5]) && eqL(b[5], a[4]) && eqL(b[6], a[6]) && eqL(b[11], a[11]))) okMI = false;
+}
+for (const [m, i] of lim('md_pi')) {
+  const a = twelve(rec(META.findIndex((x) => x.c === 'normal' && !x.xf && x.o === m.o))), b = twelve(applyXf(rec(i), 'md_pi'));
+  // RA↔LL: I → −III, II → −II, III → −I, aVR↔aVF, aVL igual, precordiales iguales
+  if (!(eqL(b[0], a[2], -1) && eqL(b[1], a[1], -1) && eqL(b[2], a[0], -1) && eqL(b[3], a[5]) && eqL(b[5], a[3]) && eqL(b[4], a[4]) && eqL(b[9], a[9]))) okMD = false;
+}
+t('fase 7: brazo izquierdo ↔ pierna izquierda es la transformación exacta (I↔II, III invertida, aVL↔aVF)', okMI);
+t('fase 7: brazo derecho ↔ pierna izquierda es la transformación exacta (II invertida, aVR↔aVF, aVL igual)', okMD);
+t('fase 7: LA↔LL solo sobre normales con eje ≥ 30° (la pista P en I > P en II debe existir)', lim('mi_pi').every(([m]) => (META.find((x) => x.c === 'normal' && !x.xf && x.o === m.o).ax || 0) >= 30));
+t('fase 7: las inversiones se confunden entre sí en las opciones', ['inv_brazos', 'inv_mi_pi', 'inv_md_pi'].every((c) => CATS[c].conf.filter((x) => x.startsWith('inv_')).length >= 2));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

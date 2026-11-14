@@ -299,10 +299,16 @@ function gradeMon(meta, rAns, kAns, ctx) {
 
 /* Inversión de electrodos: transformación exacta sobre [I, II, V1–V6].
    Brazos (RA↔LA): I' = −I, II' = III = II − I; las precordiales no cambian porque el terminal central de Wilson es el mismo. */
+// Brazo izq. ↔ pierna izq. (LA↔LL): I' = II, II' = I (III se invierte, aVL ↔ aVF, aVR igual).
+// Brazo der. ↔ pierna izq. (RA↔LL): I' = −III = I − II, II' = −II (III' = −I, aVR ↔ aVF, aVL igual).
 function applyXf(r, xf) {
-  if (xf !== 'brazos') return r;
+  if (!['brazos', 'mi_pi', 'md_pi'].includes(xf)) return r;
   const I = r[0], II = r[1], nI = new Float32Array(I.length), nII = new Float32Array(I.length);
-  for (let k = 0; k < I.length; k++) { nI[k] = -I[k]; nII[k] = II[k] - I[k]; }
+  for (let k = 0; k < I.length; k++) {
+    if (xf === 'brazos') { nI[k] = -I[k]; nII[k] = II[k] - I[k]; }
+    else if (xf === 'mi_pi') { nI[k] = II[k]; nII[k] = I[k]; }
+    else { nI[k] = I[k] - II[k]; nII[k] = -II[k]; }
+  }
   return [nI, nII, ...r.slice(2)];
 }
 

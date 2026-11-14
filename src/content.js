@@ -225,11 +225,25 @@ const CATS = {
     conf: ['brd', 'scacest_ant', 'normal', 'wpw', 'hvi'],
   },
   inv_brazos: {
-    g: 'otros', name: 'Inversión de electrodos de los brazos',
+    g: 'otros', name: 'Inversión brazo derecho ↔ brazo izquierdo',
     claves: ['P, QRS y T negativos en I (imagen en espejo)', 'aVR positiva; II y III intercambiadas, igual que aVR y aVL', 'Precordiales normales, con progresión de la R conservada'],
     trampa: 'La dextrocardia también invierte I, pero altera las precordiales (la R disminuye de V1 a V6). Antes de diagnosticar un eje derecho extremo o un infarto lateral, revisa los cables.',
     sva: 'Recoloca los electrodos y repite el ECG. Es la inversión de cables más frecuente, y con la prisa de la ambulancia todavía más.',
-    conf: ['normal', 'hvi', 'iam_antiguo', 'brd', 'hbai'],
+    conf: ['inv_md_pi', 'inv_mi_pi', 'normal', 'iam_antiguo', 'brd'],
+  },
+  inv_mi_pi: {
+    g: 'otros', name: 'Inversión brazo izquierdo ↔ pierna izquierda',
+    claves: ['I y II intercambiadas: la P es más alta en I que en II', 'III invertida (P negativa en III) y aVL ↔ aVF intercambiadas', 'aVR y precordiales normales: el ECG parece casi normal'],
+    trampa: 'Es la inversión que más pasa desapercibida. Puede fabricar una Q o una T negativa en III que se lee como necrosis inferior antigua. Si cambia la cara inferior sin cambio clínico, compara con un ECG previo y revisa los cables.',
+    sva: 'Recoloca los electrodos y repite el ECG antes de interpretar la cara inferior.',
+    conf: ['normal', 'iam_antiguo', 'inv_brazos', 'inv_md_pi', 'hbai'],
+  },
+  inv_md_pi: {
+    g: 'otros', name: 'Inversión brazo derecho ↔ pierna izquierda',
+    claves: ['II, III y aVF con P, QRS y T negativos', 'aVR positiva (es la antigua aVF) y aVL sin cambios', 'Precordiales normales'],
+    trampa: 'Simula un ritmo auricular bajo o de la unión (P negativa en cara inferior) o un IAM inferior. Una aVR positiva con precordiales normales es casi siempre un cable.',
+    sva: 'Recoloca los electrodos y repite el ECG. Si persiste con los cables bien puestos, entonces sí: piensa en ritmo ectópico auricular o dextrocardia.',
+    conf: ['inv_brazos', 'union', 'iam_antiguo', 'scacest_inf', 'inv_mi_pi'],
   },
 };
 

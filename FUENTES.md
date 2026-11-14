@@ -84,7 +84,7 @@ Leyenda: ✅ ya en la v0.1 · 🟢 señal real con etiqueta fiable · 🟡 seña
 | Bajo voltaje | 🟢 Chapman/Ningbo, SPH | 1.040 · 322 |
 | Pericarditis | ✅ 🖼️ Commons; 🟡 MIMIC | 4 · ~2.500 |
 | Dextrocardia | ✅ 🖼️ Commons; 🟡 MIMIC | 1 · 323 |
-| Hiperpotasemia, hipopotasemia, hipocalcemia | ✅ 🖼️ Commons (con la cifra de la fuente). Ninguna base abierta vincula señal y electrolitos | 3 · 2 · 1 |
+| Hiperpotasemia, hipopotasemia, hipocalcemia | ✅ 🖼️ Commons (con la cifra de la fuente). Ninguna base abierta vincula señal y electrolitos | 3 · 2 · 2 |
 | Hipotermia (J de Osborn), TEP, derrame con alternancia | ✅ 🖼️ Commons | 1 · 1 · 2 |
 | Hemorragia subaracnoidea | ✅ 🖼️ Commons | 1 |
 | Tricíclicos, Takotsubo | 🖼️ LITFL | — |
@@ -93,7 +93,7 @@ Leyenda: ✅ ya en la v0.1 · 🟢 señal real con etiqueta fiable · 🟡 seña
 
 | Tipo | Fuente |
 |---|---|
-| Inversión de electrodos de miembros (MD-MI, MI-PI, etc.) | 🔁 transformación exacta de cualquier ECG real; 🟡 MIMIC (1.689 detectadas por el aparato) |
+| Inversión de electrodos de miembros | ✅ 🔁 MD↔MI, MI↔PI y MD↔PI, transformación exacta de ECG normales reales; 🟡 MIMIC (1.689 detectadas por el aparato) |
 | Artefacto de temblor, tiritona, movimiento | ✅ simulado electrodo a electrodo |
 
 ## Huecos que no cubre ninguna base abierta con señal
@@ -108,4 +108,5 @@ Hiperpotasemia, hipotermia, intoxicación por tricíclicos, Wellens, de Winter y
 4. ✅ **Brugada**, QT por fármacos, FA preexcitada e inversión de electrodos (hecho).
 5. ✅ **Modo imagen** (hecho): 22 ECG de Wikimedia Commons para 13 entidades sin señal. Pendiente: torsade, IAM de VD, fallo de captura.
 6. ✅ **Monitor periparada** (hecho): TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas, con conducta ERC 2025.
-7. **Banco propio** de ECG anonimizados del usuario.
+7. ✅ **Cables y huecos** (hecho): inversiones MI↔PI y MD↔PI, segunda hipocalcemia. Asistolia sin tiras limpias nuevas.
+8. **Banco propio** de ECG anonimizados del usuario.
