@@ -35,6 +35,13 @@ const CATS = {
     sva: 'Inestable: cardioversión sincronizada, primera descarga a máxima energía (ERC 2025). Estable: control de frecuencia, tiempo de evolución y anticoagulación.',
     conf: ['flutter', 'taqui', 'ev', 'tsv', 'normal'],
   },
+  fa_preex: {
+    g: 'ritmo', name: 'FA preexcitada (WPW)',
+    claves: ['Ritmo irregularmente irregular', 'QRS anchos y de morfología cambiante latido a latido (grado variable de preexcitación)', 'Puede ser muy rápida: RR preexcitados muy cortos (≤ 250 ms) indican una vía accesoria peligrosa'],
+    trampa: 'No es una TV ni una FA con bloqueo de rama: la irregularidad y los QRS cambiantes la delatan. Nada de adenosina, verapamilo, diltiazem, betabloqueantes ni digoxina: favorecen la conducción por la vía y puede degenerar en FV.',
+    sva: 'Inestable: cardioversión eléctrica sincronizada. Estable: la cardioversión eléctrica también es segura; los antiarrítmicos indicados (procainamida, ibutilida) son de uso hospitalario (ESC 2019).',
+    conf: ['fa', 'tv', 'bri', 'brd', 'wpw'],
+  },
   flutter: {
     g: 'ritmo', name: 'Flutter auricular',
     claves: ['Ondas F en dientes de sierra a ~300/min, sin línea isoeléctrica, en II, III, aVF y V1', 'Conducción 2:1 (FC ~150), 3:1, 4:1 (~75) o variable', 'QRS estrecho y regular si la conducción es fija'],
@@ -209,6 +216,20 @@ const CATS = {
     trampa: 'Es efecto, no intoxicación. La intoxicación da casi cualquier arritmia (EV y bigeminismo, taquicardia auricular con bloqueo, BAV, TV bidireccional) con clínica digestiva o visual e hiperpotasemia.',
     sva: 'Pregunta por digoxina, función renal y K+. En la intoxicación grave hay antídoto (fragmentos Fab antidigoxina).',
     conf: ['scasest', 'hvi', 'fa', 'qt_largo', 'normal'],
+  },
+  brugada: {
+    g: 'otros', name: 'Patrón de Brugada tipo 1',
+    claves: ['Elevación del punto J y del ST ≥ 2 mm en V1 y/o V2, con morfología «en cúpula» descendente', 'Seguida de una onda T negativa, sin línea isoeléctrica entre ambas', 'Se ve mejor con V1–V2 en el 2.º o 3.er espacio intercostal (ESC 2022)'],
+    trampa: 'El patrón tipo 2 (en silla de montar, con T positiva) no es diagnóstico por sí solo. La fiebre y los bloqueadores de los canales de sodio pueden desenmascararlo o empeorarlo. Diferéncialo de BRD, repolarización precoz, hiperpotasemia y SCACEST anterior.',
+    sva: 'Síncope, palpitaciones nocturnas o PCR con este patrón: riesgo de FV; traslado monitorizado y valoración por cardiología. Trata la fiebre y evita los fármacos de la lista de brugadadrugs.org.',
+    conf: ['brd', 'scacest_ant', 'normal', 'wpw', 'hvi'],
+  },
+  inv_brazos: {
+    g: 'otros', name: 'Inversión de electrodos de los brazos',
+    claves: ['P, QRS y T negativos en I (imagen en espejo)', 'aVR positiva; II y III intercambiadas, igual que aVR y aVL', 'Precordiales normales, con progresión de la R conservada'],
+    trampa: 'La dextrocardia también invierte I, pero altera las precordiales (la R disminuye de V1 a V6). Antes de diagnosticar un eje derecho extremo o un infarto lateral, revisa los cables.',
+    sva: 'Recoloca los electrodos y repite el ECG. Es la inversión de cables más frecuente, y con la prisa de la ambulancia todavía más.',
+    conf: ['normal', 'hvi', 'iam_antiguo', 'brd', 'hbai'],
   },
 };
 

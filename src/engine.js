@@ -297,4 +297,13 @@ function gradeMon(meta, rAns, kAns, ctx) {
   return { rOk, kOk, g: rOk && kOk ? 'ok' : rOk || kOk ? 'partial' : 'bad' };
 }
 
-if (typeof module !== 'undefined') module.exports = { monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };
+/* Inversión de electrodos: transformación exacta sobre [I, II, V1–V6].
+   Brazos (RA↔LA): I' = −I, II' = III = II − I; las precordiales no cambian porque el terminal central de Wilson es el mismo. */
+function applyXf(r, xf) {
+  if (xf !== 'brazos') return r;
+  const I = r[0], II = r[1], nI = new Float32Array(I.length), nII = new Float32Array(I.length);
+  for (let k = 0; k < I.length; k++) { nI[k] = -I[k]; nII[k] = II[k] - I[k]; }
+  return [nI, nII, ...r.slice(2)];
+}
+
+if (typeof module !== 'undefined') module.exports = { applyXf, monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };

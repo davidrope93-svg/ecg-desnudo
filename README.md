@@ -8,6 +8,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 ## Qué hay
 
+- **Fase 4**: Brugada tipo 1 espontáneo (Brugada-HUCA), QT largo por quinidina y dofetilida (ECGRDVQ), FA preexcitada (INCART) e inversión de electrodos de los brazos (transformación exacta de ECG normales).
 - **Oclusión coronaria (fase 3)**: 78 pacientes de STAFF III con el balón ocluyendo DA, CD o Cx: ECG basal, al minuto 1 y al final del inflado. Pregunta de oclusión y arteria, comparación con el basal y vista de evolución con el cambio del ST por derivación.
 - **Bloqueos y taquicardias (fase 2)**: Mobitz I, Mobitz II/2:1/avanzado, BAV completo, ritmo de la unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman-Shaoxing/Ningbo y SPH), revisados uno a uno. Banco total: 224 ECG de 12 derivaciones y 102 tiras de monitor.
 - **Modo monitor (fase 1)**: 98 tiras reales de parada y periparada anotadas por expertos (vfdb, cudb, MIT-BIH), con barrido, ganancia, compresiones torácicas hasta la pausa de análisis y pregunta de ritmo + conducta (descarga, cardioversión sincronizada, RCP y adrenalina, o no descargar) según la situación.
@@ -29,7 +30,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 153 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 167 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```
@@ -37,5 +38,7 @@ python3 build.py && node tests/run.js
 ```
 
 ## Fuentes y licencia de los datos
+
+Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia.
 
 Wagner P, et al. PTB-XL, a large publicly available electrocardiography dataset (v1.0.3). PhysioNet, 2022. Strodthoff N, et al. PTB-XL+ (v1.0.1). PhysioNet, 2023. Ambos CC BY 4.0. El artefacto es simulado. Herramienta docente.

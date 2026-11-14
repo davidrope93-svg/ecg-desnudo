@@ -18,7 +18,7 @@ const fmt = (x, d = 0) => (x == null || isNaN(x)) ? '—' : Number(x).toFixed(d)
 /* ---------- Datos ---------- */
 let BYTES = null;
 const CACHE = new Map();
-const rec8 = (i) => { if (!CACHE.has(i)) CACHE.set(i, decodeRecord(BYTES, ECG_META[i].o, ECG_N)); return CACHE.get(i); };
+const rec8 = (i) => { if (!CACHE.has(i)) CACHE.set(i, applyXf(decodeRecord(BYTES, ECG_META[i].o, ECG_N), ECG_META[i].xf)); return CACHE.get(i); };
 async function loadBank() {
   const bin = Uint8Array.from(atob(ECG_BLOB), (c) => c.charCodeAt(0));
   const ds = new DecompressionStream('gzip');
@@ -130,7 +130,7 @@ function makeViewer(opt = {}) {
     g.fillStyle = '#4a3434'; g.font = '2.6px -apple-system,Segoe UI,Roboto,Arial,sans-serif'; g.textBaseline = 'middle';
     const F = FILTERS[st.filt.mode];
     g.fillText('25 mm/s · 10 mm/mV · ' + F.name + ' · 50 Hz ' + (st.filt.notch ? 'sí' : 'no') + (st.clean ? ' · SIN ARTEFACTO' : ''), 2, 3.6);
-    if (opt.ctx && st.meta) { const t = (st.meta.sex === 'M' ? 'Varón' : 'Mujer') + (st.meta.age != null ? ' · ' + st.meta.age + ' años' : ''); g.textAlign = 'right'; g.fillText(t, G.W - 2, 3.6); g.textAlign = 'left'; }
+    if (opt.ctx && st.meta && (st.meta.sex || st.meta.age != null)) { const t = (st.meta.sex ? (st.meta.sex === 'M' ? 'Varón' : 'Mujer') : '') + (st.meta.age != null ? (st.meta.sex ? ' · ' : '') + st.meta.age + ' años' : ''); g.textAlign = 'right'; g.fillText(t, G.W - 2, 3.6); g.textAlign = 'left'; }
     const sig = signals();
     const lw = Math.max(px * 1.25, 0.17);
     const trace = (a, i0, i1, x0, y0) => {
@@ -241,7 +241,7 @@ function feedback(meta, grade, ans, P) {
   if (meta.std.length) st.push('Descenso del ST: ' + meta.std.join(', '));
   if (meta.avr >= 0.1) st.push('Elevación del ST en aVR: ' + fmt(meta.avr * 10, 1) + ' mm');
   const codes = meta.rep || meta.k.filter((k) => CODES[k] && !(k === 'NORM' && meta.c !== 'normal')).map((k) => CODES[k] + (meta.stg && /MI$/.test(k) ? ' (' + STAGES[meta.stg] + ')' : ''));
-  const SRC = { cn: ['Etiquetas de la fuente: ', 'Chapman-Shaoxing/Ningbo · ', 'etiqueta de la fuente revisada visualmente · FC estimada'], sph: ['Informe revisado por cardiólogos: ', 'SPH (Shandong) · ', 'FC estimada'] }[meta.src] || ['Informe del cardiólogo: ', 'PTB-XL n.º ', 'medidas automáticas GE 12SL (orientativas)'];
+  const SRC = meta.xf ? ['Origen: ', 'Transformación exacta de PTB-XL · ', 'mismo ECG con los cables cambiados'] : ({ cn: ['Etiquetas de la fuente: ', 'Chapman-Shaoxing/Ningbo · ', 'etiqueta de la fuente revisada visualmente · FC estimada'], sph: ['Informe revisado por cardiólogos: ', 'SPH (Shandong) · ', 'FC estimada'], huca: ['Diagnóstico: ', 'Brugada-HUCA (Asturias) · ', 'patrón revisado en el latido mediano de V1–V2 · FC estimada'], rdvq: ['Contexto: ', 'ECGRDVQ (FDA) · ', 'QTc del laboratorio central del ensayo'], incart: ['Anotación: ', 'INCART (San Petersburgo) · ', 'anotado por expertos · FC estimada'] }[meta.src] || ['Informe del cardiólogo: ', 'PTB-XL n.º ', 'medidas automáticas GE 12SL (orientativas)']);
   const sec = meta.sec.map((c) => CATS[c].name);
   return h('div', { class: 'fb' },
     h('div', { class: 'verdict ' + grade }, V[grade]),
@@ -256,7 +256,7 @@ function feedback(meta, grade, ans, P) {
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      h('div', { class: 'src' }, SRC[1] + meta.id + ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · ' + SRC[2] + ' · artefacto simulado')));
+      h('div', { class: 'src' }, SRC[1] + meta.id + (meta.sex ? ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') : '') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · ' + SRC[2] + ' · artefacto simulado')));
 }
 
 const SYS = h('details', { class: 'sys' }, h('summary', {}, 'Lectura sistemática'),

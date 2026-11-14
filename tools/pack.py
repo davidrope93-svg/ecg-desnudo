@@ -48,6 +48,37 @@ for x in json.load(open('/home/claude/ecg-desnudo/tools/p2_final.json')):
     sx = str(x['sex']).lower()
     meta.append(dict(id=x['id'], src=x['src'], c=x['c'], o=off, age=('≥90' if age and age >= 90 else age), sex=('M' if sx in ('m', 'male') else 'F'),
         hr=x['hr'], pr=None, qrs=None, qt=None, qtc=None, ax=None, avr=0, ste=[], std=[], k=[], rep=labels(x['src'], x['dx']), stg=None, sec=secondary(x['src'], x['dx'], x['c'])))
+# Fase 4: Brugada tipo 1 (Brugada-HUCA), QT por fármacos (ECGRDVQ), FA preexcitada (INCART), revisados uno a uno
+import pickle
+P4 = pickle.load(open('/home/claude/data/p4/p4.pkl', 'rb'))
+BRUG_OK = {'428031', '852786', '972330', '1122903', '1157038', '1191595', '1220716', '1358245', '1426919', '3015438'}
+QT_DROP = {'3d4a8418'}                                   # artefacto de línea de base al final
+FA_KEEP = {'I71@%d' % t for t in (671, 695, 719, 743, 767, 1265)}
+DRUG = {'Quinidine Sulph': 'quinidina', 'Dofetilide': 'dofetilida'}
+from p2_load import feats
+for x in P4:
+    if x['c'] == 'brugada' and x['id'] not in BRUG_OK: continue
+    if x['c'] == 'qt_largo' and x['id'] in QT_DROP: continue
+    if x['c'] == 'fa_preex' and x['id'] not in FA_KEEP: continue
+    y = x['sig'][:, KEEP]
+    q = np.round(y / Q).astype(np.int64); d = np.diff(q, axis=0, prepend=0)
+    off = len(blob)
+    for k in range(8): blob += varint([int(v) for v in d[:, k]])
+    i = x['info']; age = sex = None; rep = []; sec = []; hr = feats(x['sig'])['hr']; qtc = None; qrs = None
+    if x['c'] == 'brugada':
+        rep = ['patrón de Brugada tipo 1 espontáneo', 'síndrome de Brugada con diagnóstico clínico confirmado'] + (['muerte súbita en el seguimiento'] if i['sd'] else [])
+    elif x['c'] == 'qt_largo':
+        u = 'mcg' if i['unit'] == 'ug' else i['unit']
+        rep = ['voluntario sano en un ensayo clínico', '%s %s %s, %s h tras la dosis' % (DRUG[i['drug']], int(i['dose']), u, str(i['h']).replace('.0', '')), 'QTc %d ms (basal %d ms, Bazett)' % (i['qtc'], i['base'])]
+        age, sex, hr, qtc, qrs = i['age'], i['sex'], round(60000 / i['rr']), i['qtc'], i['qrs']
+    else:
+        rep = ['fibrilación auricular preexcitada (WPW)']; sec = ['fa', 'wpw']
+    meta.append(dict(id=x['id'], src=x['src'], c=x['c'], o=off, age=age, sex=sex, hr=hr, pr=None, qrs=qrs, qt=None, qtc=qtc, ax=None, avr=0, ste=[], std=[], k=[], rep=rep, stg=None, sec=sec))
+# Inversión de electrodos de los brazos: transformación exacta en la interfaz (xf) sobre ECG normales ya empaquetados
+for m in [m for m in meta if m['c'] == 'normal'][:8]:
+    inv = dict(m); inv.update(id='inv-%s' % m['id'], c='inv_brazos', xf='brazos', ax=None, ste=[], std=[], avr=0, k=[], sec=[],
+                              rep=['ECG normal (PTB-XL n.º %s) con los electrodos de brazo derecho y brazo izquierdo intercambiados' % m['id']])
+    meta.append(inv)
 gz = gzip.compress(bytes(blob), 9)
 b64 = base64.b64encode(gz).decode()
 print('records', len(meta), 'raw varint', len(blob), 'gzip', len(gz), 'b64', len(b64))

@@ -141,5 +141,26 @@ const Li = (l) => LEADS.indexOf(l);
 t('oclusión DA: sube el ST en V2–V3', meanD('da', Li('V2')) > 0.1 && meanD('da', Li('V3')) > 0.1);
 t('oclusión CD: sube en III y baja en aVL', meanD('cd', Li('III')) > 0.05 && meanD('cd', Li('aVL')) < -0.05);
 t('oclusión Cx: baja en V1–V3 (posterior)', meanD('cx', Li('V2')) < -0.05);
+
+// 12. Fase 4: Brugada, QT por fármacos, FA preexcitada e inversión de electrodos
+const applyXf = E('applyXf');
+const inv = META.map((m, i) => [m, i]).filter(([m]) => m.xf === 'brazos');
+t('fase 4: al menos 5 inversiones de brazos', inv.length >= 5);
+let xfOk = true;
+for (const [m, i] of inv) {
+  const src = META.findIndex((x) => x.c === 'normal' && x.o === m.o);
+  const a = twelveFrom(...(() => { const r = rec(src); return [r[0], r[1], r.slice(2)]; })());
+  const rb = applyXf(rec(i), 'brazos'), b = twelveFrom(rb[0], rb[1], rb.slice(2));
+  const eq = (x, y, s = 1) => x.every((v, j) => Math.abs(v - s * y[j]) < 1e-5);
+  // RA↔LA: I → −I, II ↔ III, aVR ↔ aVL, aVF y precordiales iguales
+  if (src < 0 || !eq(b[0], a[0], -1) || !eq(b[1], a[2]) || !eq(b[2], a[1]) || !eq(b[3], a[4]) || !eq(b[4], a[3]) || !eq(b[5], a[5]) || !eq(b[6], a[6]) || !eq(b[11], a[11])) xfOk = false;
+}
+t('fase 4: la inversión de brazos es la transformación exacta (I→−I, II↔III, aVR↔aVL)', xfOk);
+const BR = META.filter((m) => m.c === 'brugada');
+t('fase 4: al menos 8 Brugada tipo 1 confirmados', BR.length >= 8 && BR.every((m) => m.src === 'huca' && m.rep.some((r) => /Brugada tipo 1/.test(r))));
+const QD = META.filter((m) => m.src === 'rdvq');
+t('fase 4: QT por fármacos con QTc ≥ 500 ms', QD.length >= 5 && QD.every((m) => m.c === 'qt_largo' && m.qtc >= 500));
+const FP = META.filter((m) => m.c === 'fa_preex');
+t('fase 4: FA preexcitada acepta FA y WPW como parciales', FP.length >= 5 && FP.every((m) => m.sec.includes('fa') && m.sec.includes('wpw')));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);
