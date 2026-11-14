@@ -228,5 +228,10 @@ t('fase 7: brazo izquierdo ↔ pierna izquierda es la transformación exacta (I�
 t('fase 7: brazo derecho ↔ pierna izquierda es la transformación exacta (II invertida, aVR↔aVF, aVL igual)', okMD);
 t('fase 7: LA↔LL solo sobre normales con eje ≥ 30° (la pista P en I > P en II debe existir)', lim('mi_pi').every(([m]) => (META.find((x) => x.c === 'normal' && !x.xf && x.o === m.o).ax || 0) >= 30));
 t('fase 7: las inversiones se confunden entre sí en las opciones', ['inv_brazos', 'inv_mi_pi', 'inv_md_pi'].every((c) => CATS[c].conf.filter((x) => x.startsWith('inv_')).length >= 2));
+
+// 16. Auditoría: la amplitud que muestra la ficha de cada tira coincide con la señal empaquetada
+const MB16 = new Uint8Array(zlib.gunzipSync(Buffer.from(E('MON_BLOB'), 'base64')));
+t('auditoría: amplitud de cada tira = señal empaquetada (± 0,02 mV)', MM.every((m) => { const x = Array.from(decodeRecord(MB16, m.o, N, 1)[0]).sort((a, b) => a - b); return Math.abs(x[Math.floor(0.99 * N)] - x[Math.floor(0.01 * N)] - m.p2p) <= 0.02; }));
+t('auditoría: criterio de tronco/multivaso de la ESC 2023 (≥ 6 derivaciones)', /≥ 6 derivaciones/.test(CATS.scasest.trampa) && !/≥ 8 derivaciones/.test(CATS.scasest.trampa));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

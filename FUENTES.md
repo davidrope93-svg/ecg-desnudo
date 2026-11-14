@@ -106,7 +106,7 @@ Hiperpotasemia, hipotermia, intoxicación por tricíclicos, Wellens, de Winter y
 2. ✅ **Bloqueos y taquicardias** (hecho): Mobitz I, Mobitz II/2:1/avanzado, BAV completo, unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman/Ningbo y SPH), revisados uno a uno. Pendiente: taquicardia auricular. Ojo: en SPH, el código 85 «2:1» acompaña al flutter (conducción 2:1), no es bloqueo AV.
 3. ✅ **OMI** (hecho): STAFF III por arteria, con basal, minuto 1 y final del inflado, incluida la circunfleja.
 4. ✅ **Brugada**, QT por fármacos, FA preexcitada e inversión de electrodos (hecho).
-5. ✅ **Modo imagen** (hecho): 22 ECG de Wikimedia Commons para 13 entidades sin señal. Pendiente: torsade, IAM de VD, fallo de captura.
+5. ✅ **Modo imagen** (hecho): 23 ECG de Wikimedia Commons para 13 entidades sin señal. Pendiente: torsade, IAM de VD, fallo de captura.
 6. ✅ **Monitor periparada** (hecho): TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas, con conducta ERC 2025.
 7. ✅ **Cables y huecos** (hecho): inversiones MI↔PI y MD↔PI, segunda hipocalcemia. Asistolia sin tiras limpias nuevas.
 8. **Banco propio** de ECG anonimizados del usuario.

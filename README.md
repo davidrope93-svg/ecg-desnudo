@@ -10,7 +10,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 - **Cables (fase 7)**: además de brazo derecho ↔ brazo izquierdo, las inversiones brazo izquierdo ↔ pierna izquierda (la que más pasa desapercibida) y brazo derecho ↔ pierna izquierda, por transformación exacta de ECG normales reales.
 - **Monitor periparada (fase 6)**: 54 tiras nuevas (TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas) con su conducta según el ERC 2025: cardioversión sincronizada, vagales y adenosina, control de FC, atropina, o marcapasos y perfusión si el BAV tiene QRS ancho. El monitor tiene ya 156 tiras y 13 ritmos.
-- **Imagen · casos clásicos (fase 5)**: 22 ECG reales en imagen de Wikimedia Commons (CC BY y CC BY-SA) para lo que no existe en señal: hiperpotasemia, hipopotasemia, hipocalcemia, hipotermia, Wellens (con el ECG del mismo paciente con dolor), de Winter, pericarditis, TEP, taponamiento con alternancia eléctrica, IAM con BRI (Sgarbossa), IAM posterior, dextrocardia y hemorragia subaracnoidea que imita un SCACEST. Zoom por toque, autor y licencia en cada imagen.
+- **Imagen · casos clásicos (fase 5)**: 23 ECG reales en imagen de Wikimedia Commons (CC BY y CC BY-SA) para lo que no existe en señal: hiperpotasemia, hipopotasemia, hipocalcemia, hipotermia, Wellens (con el ECG del mismo paciente con dolor), de Winter, pericarditis, TEP, taponamiento con alternancia eléctrica, IAM con BRI (Sgarbossa), IAM posterior, dextrocardia y hemorragia subaracnoidea que imita un SCACEST. Zoom por toque, autor y licencia en cada imagen.
 - **Fase 4**: Brugada tipo 1 espontáneo (Brugada-HUCA), QT largo por quinidina y dofetilida (ECGRDVQ), FA preexcitada (INCART) e inversión de electrodos de los brazos (transformación exacta de ECG normales).
 - **Oclusión coronaria (fase 3)**: 78 pacientes de STAFF III con el balón ocluyendo DA, CD o Cx: ECG basal, al minuto 1 y al final del inflado. Pregunta de oclusión y arteria, comparación con el basal y vista de evolución con el cambio del ST por derivación.
 - **Bloqueos y taquicardias (fase 2)**: Mobitz I, Mobitz II/2:1/avanzado, BAV completo, ritmo de la unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman-Shaoxing/Ningbo y SPH), revisados uno a uno. Banco total: 224 ECG de 12 derivaciones y 102 tiras de monitor.
@@ -34,7 +34,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 216 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 218 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```
@@ -43,6 +43,6 @@ python3 build.py && node tests/run.js
 
 ## Fuentes y licencia de los datos
 
-Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia. Las imágenes de `img/` son de Wikimedia Commons; cada una conserva su licencia (CC BY o CC BY-SA) y su autor, que se muestran en la app y en `src/img_data.js`; están redimensionadas.
+Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia. Las imágenes de `img/` son de Wikimedia Commons; cada una conserva su licencia (CC BY o CC BY-SA) y su autor, que se muestran en la app y en `src/img_data.js`; están redimensionadas. Uso docente sin ánimo de lucro: antes de cualquier uso comercial, revisar las 5 imágenes señaladas en `CLAUDE.md`.
 
 Wagner P, et al. PTB-XL, a large publicly available electrocardiography dataset (v1.0.3). PhysioNet, 2022. Strodthoff N, et al. PTB-XL+ (v1.0.1). PhysioNet, 2023. Ambos CC BY 4.0. El artefacto es simulado. Herramienta docente.

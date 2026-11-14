@@ -52,7 +52,8 @@ for i, o in enumerate(sel):
     q = np.round(o['sig'].astype(float) / 0.005).astype(np.int64)
     d = np.diff(q, prepend=0)
     off = len(blob); blob += varint([int(v) for v in d])
-    meta.append(dict(id=i + 1, c=o['cat'], o=off, db=o['db'], rec=o['rec'], t0=o['t0'], lead=o['lead'], p2p=o['p2p'],
+    qs = np.sort(q * 0.005); p2p = round(float(qs[int(0.99 * len(qs))] - qs[int(0.01 * len(qs))]), 2)  # sobre la señal empaquetada, como la lee la app
+    meta.append(dict(id=i + 1, c=o['cat'], o=off, db=o['db'], rec=o['rec'], t0=o['t0'], lead=o['lead'], p2p=p2p,
                      acc=(['flv'] if o['db'] == 'cudb' else []), ctx=CTX[o['cat']]))
     if o.get('qrs'): meta[-1]['qrs'] = o['qrs']
     if o.get('qrs') == 'ancho': meta[-1]['k'] = {'inestable': 'marcapasos'}

@@ -185,7 +185,7 @@ const CATS = {
   scasest: {
     g: 'isq', name: 'Descenso del ST (SCASEST)',
     claves: ['Descenso del ST horizontal o descendente ≥ 0,5 mm en ≥ 2 derivaciones contiguas', 'Puede acompañarse de T negativas', 'Sin elevación del ST que cumpla criterios de SCACEST'],
-    trampa: 'Descenso máximo en V1–V3: posible IAM posterior, registra V7–V9. Descenso ≥ 1 mm en ≥ 8 derivaciones con elevación en aVR y/o V1: lesión de tronco o multivaso. Descarta causas secundarias: HVI, BRI, digoxina, taquicardia.',
+    trampa: 'Descenso máximo en V1–V3: posible IAM posterior, registra V7–V9. Descenso ≥ 1 mm en ≥ 6 derivaciones con elevación en aVR y/o V1: isquemia multivaso o lesión de tronco (ESC 2023). Descarta causas secundarias: HVI, BRI, digoxina, taquicardia.',
     sva: 'SCASEST de muy alto riesgo (inestabilidad, dolor refractario, arritmias, insuficiencia cardiaca): estrategia invasiva inmediata (< 2 h), contacto con hemodinámica (ESC 2023).',
     conf: ['digital', 'hvi', 'scacest_ant', 'normal', 'iam_antiguo'],
   },

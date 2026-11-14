@@ -664,7 +664,7 @@ function monFeedback(m, ctx, res, rAns, kAns, P) {
         h('div', { style: 'margin-top:6px' }, h('b', {}, 'Conducta: '), CONDUCTAS[okK]), kAns && kAns !== okK ? h('div', { class: 'small muted' }, 'Tu conducta: ' + CONDUCTAS[kAns]) : null,
         m.qrs && ctx === 'inestable' ? h('div', { class: 'small', style: 'margin-top:4px' }, m.qrs === 'ancho' ? 'QRS ancho: bloqueo probablemente por debajo del His. La atropina es ineficaz y puede empeorarlo (ERC 2025).' : 'QRS estrecho: primero atropina; si no responde, perfusión de isoprenalina o adrenalina y marcapasos.') : null),
       h('div', {}, h('h4', {}, 'En esta tira'),
-        h('div', { class: 'facts' }, h('span', {}, 'Amplitud ' + fmt(m.p2p, 1) + ' mV (' + Math.round(m.p2p * 10) + ' mm a ×1)'), h('span', {}, MSRC[m.db] + ' · registro ' + m.rec + ' · ' + mmss(m.t0))),
+        h('div', { class: 'facts' }, h('span', {}, 'Amplitud ' + fmt(m.p2p, 1) + ' mV (' + Math.round(m.p2p * 10) + ' mm a ×1)'), h('span', {}, MSRC[m.db] + ' · registro ' + m.rec + ' · ' + (['cn', 'sph', 'ptbxl'].includes(m.db) ? 'derivación II' : mmss(m.t0)))),
         P ? h('div', { class: 'small muted', style: 'margin-top:4px' }, h('b', {}, 'Artefacto: '), describeMonNoise(P)) : null),
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
@@ -958,6 +958,7 @@ function imgPractice() {
     bar.textContent = (k + 1) + ' / ' + deck.length;
     ctxBox.replaceChildren((S.settings.ctx || m.ctxFijo) && m.ctx ? h('div', { class: 'ctx' }, h('b', {}, 'Contexto: '), m.ctx) : '');
     viewer.set(m.file); fbBox.replaceChildren();
+    new Image().src = 'img/' + deck[(k + 1) % deck.length].file; // precarga la siguiente: en el artefacto cada imagen tarda unos segundos
     const opts = imgOptions(m, IMG_CATS, R);
     const btns = opts.map((c, i) => h('button', { class: 'opt', 'data-c': c, onclick: () => answer(c) }, (i + 1) + '. ' + imgName(c)));
     let done = false;
