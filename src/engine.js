@@ -329,4 +329,34 @@ function gradeImg(meta, ans) {
   return 'bad';
 }
 
-if (typeof module !== 'undefined') module.exports = { imgOptions, gradeImg, applyXf, monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };
+/* ---------- Reportes y copia del progreso (sin datos personales) ---------- */
+const APP_NAME = 'ECG en Ruta';
+const fechaES = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); };
+// Texto legible para enviar por WhatsApp o correo: cada caso con su identificador, lo que dice la app y el motivo
+function reportText(list, ver) {
+  const one = (r) => ['Modo: ' + r.modo, 'Caso: ' + r.caso + ' [' + r.ref + ']', 'La app dice: ' + r.etiqueta, r.resp ? 'Mi respuesta: ' + r.resp : null,
+    r.extra || null, 'Motivo: ' + r.motivo, r.nota ? 'Comentario: ' + r.nota : null, 'Fecha: ' + fechaES(r.t)].filter(Boolean).join('\n');
+  return APP_NAME + ' · ' + (list.length === 1 ? 'caso dudoso' : list.length + ' casos dudosos') + ' · versión ' + ver + '\n\n' + list.map(one).join('\n\n');
+}
+function buildExport(st, ver, build, now) {
+  return { app: APP_NAME, formato: 1, version: ver, build, fecha: now, total: st.total, stats: st.stats, casos: st.cf, fallos: st.missed, reportes: st.reports };
+}
+// Valida un archivo exportado antes de cargarlo: descarta lo que no cuadre en vez de fallar
+function parseImport(text, validIds) {
+  const err = { error: 'El archivo no es una copia del progreso de ' + APP_NAME + '.' };
+  let d; try { d = JSON.parse(text); } catch (e) { return err; }
+  if (!d || d.app !== APP_NAME || !d.stats || typeof d.stats !== 'object' || Array.isArray(d.stats)) return err;
+  const num = (x) => Number.isInteger(x) && x >= 0;
+  const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : null;
+  const stats = {};
+  for (const [k, v] of Object.entries(d.stats)) if (v && num(v.n) && num(v.ok) && num(v.p || 0) && v.ok + (v.p || 0) <= v.n) stats[k] = { n: v.n, ok: v.ok, p: v.p || 0 };
+  const casos = {};
+  if (d.casos && typeof d.casos === 'object') for (const [k, a] of Object.entries(d.casos)) if (Array.isArray(a) && a.length === 3 && a.every(num) && a[1] + a[2] <= a[0]) casos[k] = a.slice();
+  const fallos = (Array.isArray(d.fallos) ? d.fallos : []).filter((id) => validIds.has(id)).slice(0, 80);
+  const reportes = (Array.isArray(d.reportes) ? d.reportes : []).filter((r) => r && typeof r.ref === 'string' && typeof r.motivo === 'string').slice(0, 300)
+    .map((r) => ({ t: str(r.t, 30) || '', modo: str(r.modo, 40) || '', ref: r.ref.slice(0, 60), caso: str(r.caso, 200) || r.ref, etiqueta: str(r.etiqueta, 120) || '', resp: str(r.resp, 120), extra: str(r.extra, 300), motivo: r.motivo.slice(0, 80), nota: str(r.nota, 600) || '', env: r.env ? 1 : 0 }));
+  const total = Object.values(stats).reduce((a, v) => a + v.n, 0);
+  return { stats, casos, fallos, reportes, total, fecha: str(d.fecha, 30) };
+}
+
+if (typeof module !== 'undefined') module.exports = { reportText, buildExport, parseImport, APP_NAME, imgOptions, gradeImg, applyXf, monitorStrip, gradeMon, LEADS, decodeRecord, twelveFrom, rng, hashSeed, lowpass, notch, highpass1, applyFilters, FILTERS, NOISE, noiseProfile, noisyLeads, makeArtifact, ELEC, options, grade, buildDeck, shuffle };

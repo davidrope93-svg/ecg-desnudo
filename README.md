@@ -6,10 +6,11 @@ Entrenador de lectura de ECG para SVA extrahospitalaria: ECG reales de 12 deriva
 
 **Abrir el entrenador:** https://davidrope93-svg.github.io/ecg-desnudo/
 
-Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes de ECG previstas y lo que cubre cada una están en [FUENTES.md](FUENTES.md).
+Funciona en el ordenador, la tablet o el móvil, sin instalar nada; y si se añade a la pantalla de inicio, se instala como una app y funciona sin cobertura. Las fuentes de ECG previstas y lo que cubre cada una están en [FUENTES.md](FUENTES.md).
 
 ## Qué hay
 
+- **Beta y distribución (14/11/2026)**: botón «Este caso no me convence» en la explicación de los cuatro modos (motivo + comentario, se guarda en el dispositivo y se envía por WhatsApp o correo con la hoja de compartir); aciertos por caso; copia del progreso en un archivo JSON (enviar a quien coordina la beta, o pasar a otro dispositivo) con importación validada; página de aviso docente y privacidad, y aviso la primera vez. App instalable (manifiesto, iconos) que funciona sin conexión: `sw.js` guarda la app, el banco de oclusiones y las imágenes (unos 15 MB) con la huella del contenido y avisa cuando hay versión nueva. No se activa dentro de un iframe (artefacto de Claude).
 - **Cables (fase 7)**: además de brazo derecho ↔ brazo izquierdo, las inversiones brazo izquierdo ↔ pierna izquierda (la que más pasa desapercibida) y brazo derecho ↔ pierna izquierda, por transformación exacta de ECG normales reales.
 - **Monitor periparada (fase 6)**: 54 tiras nuevas (TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas) con su conducta según el ERC 2025: cardioversión sincronizada, vagales y adenosina, control de FC, atropina, o marcapasos y perfusión si el BAV tiene QRS ancho. El monitor tiene ya 156 tiras y 13 ritmos.
 - **Imagen · casos clásicos (fase 5)**: 23 ECG reales en imagen de Wikimedia Commons (CC BY y CC BY-SA) para lo que no existe en señal: hiperpotasemia, hipopotasemia, hipocalcemia, hipotermia, Wellens (con el ECG del mismo paciente con dolor), de Winter, pericarditis, TEP, taponamiento con alternancia eléctrica, IAM con BRI (Sgarbossa), IAM posterior, dextrocardia y hemorragia subaracnoidea que imita un SCACEST. Zoom por toque, autor y licencia en cada imagen.
@@ -35,8 +36,9 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/engine.js` | Decodificación, derivaciones, artefacto, filtros, opciones y mazo. Sin DOM. |
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
-| `build.py` | Une todo en `index.html` (sin dependencias). El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
-| `tests/run.js` | 219 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `build.py` | Une todo en `index.html` (sin dependencias) y genera `sw.js` desde `src/sw.js` con la lista de archivos y la huella del contenido. El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
+| `manifest.webmanifest`, `icons/` | App instalable. Iconos generados con `tools/make_icons.py`. |
+| `tests/run.js` | 238 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros, mazo, reportes, copia del progreso y caché sin conexión. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```

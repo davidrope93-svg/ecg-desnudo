@@ -235,5 +235,41 @@ t('auditoría: amplitud de cada tira = señal empaquetada (± 0,02 mV)', MM.ever
 t('auditoría: criterio de tronco/multivaso de la ESC 2023 (≥ 6 derivaciones)', /≥ 6 derivaciones/.test(CATS.scasest.trampa) && !/≥ 8 derivaciones/.test(CATS.scasest.trampa));
 const TPL = fs.readFileSync(path.join(__dirname, '../src/template.html'), 'utf8');
 t('nombre: ECG en Ruta en el título y la cabecera, y la clave de progreso antigua se conserva', /<title>ECG en Ruta/.test(TPL) && /<h1>ECG en Ruta/.test(TPL) && /const KEY = 'ecgdesnudo\.v1'/.test(fs.readFileSync(path.join(__dirname, '../src/ui.js'), 'utf8')));
+
+// 17. Beta: reportes, copia del progreso y app instalable sin conexión
+const { reportText, buildExport, parseImport } = E('({ reportText, buildExport, parseImport })');
+const R1 = { t: '2026-11-14T10:00:00Z', modo: 'Monitor', ref: 'm:12', caso: 'Tira 12 · vfdb', etiqueta: 'Fibrilación ventricular', resp: 'Asistolia', extra: 'Situación: parada', motivo: 'El ritmo', nota: 'Me parece FV fina', env: 0 };
+const RT = reportText([R1], '0.9 beta (abc)');
+t('beta: el reporte lleva el identificador del caso, lo que dice la app, la respuesta, el motivo y la fecha', ['[m:12]', 'La app dice: Fibrilación ventricular', 'Mi respuesta: Asistolia', 'Motivo: El ritmo', 'Comentario: Me parece FV fina', 'Fecha: 14/11/2026', 'versión 0.9 beta'].every((x) => RT.includes(x)), RT);
+t('beta: varios reportes se agrupan en un solo texto', reportText([R1, { ...R1, ref: 'e:1', resp: null, nota: '' }], 'x').startsWith('ECG en Ruta · 2 casos dudosos') && !reportText([{ ...R1, resp: null, nota: '' }], 'x').includes('Mi respuesta'));
+const ST = { total: 5, stats: { fa: { n: 3, ok: 2, p: 0 }, m_fv: { n: 2, ok: 1, p: 1 } }, cf: { 'e:1': [2, 1, 0], 'm:12': [2, 1, 1] }, missed: [META[0].id], reports: [R1] };
+const EX = JSON.stringify(buildExport(ST, '0.9 beta', 'abc', '2026-11-14T10:00:00Z'));
+t('beta: la exportación no lleva ajustes ni nada personal, solo progreso y reportes', !/settings|aviso|nombre|email/.test(EX) && JSON.parse(EX).app === 'ECG en Ruta');
+const IMP = parseImport(EX, new Set(META.map((m) => m.id)));
+t('beta: exportar e importar devuelve el mismo progreso', !IMP.error && IMP.total === 5 && IMP.stats.fa.ok === 2 && IMP.casos["m:12"][2] === 1 && IMP.fallos[0] === META[0].id && IMP.reportes[0].nota === 'Me parece FV fina');
+t('beta: un archivo ajeno o roto se rechaza', ['no es json', '{"app":"otra","stats":{}}', '{"app":"ECG en Ruta"}', 'null'].every((x) => parseImport(x, new Set()).error));
+const BAD = parseImport(JSON.stringify({ app: 'ECG en Ruta', stats: { fa: { n: 2, ok: 5 }, fv: { n: -1, ok: 0 }, tv: { n: 3, ok: 1, p: 1 }, x: null }, casos: { a: [1, 2, 0], b: [3, 1, 1], c: 'x' }, fallos: ['inventado'], reportes: [{ ref: 'e:1', motivo: 'Otro', nota: 'z'.repeat(5000) }, { motivo: 'sin ref' }] }), new Set());
+t('beta: al importar se descartan cifras imposibles, casos y fallos inexistentes', !BAD.error && Object.keys(BAD.stats).join() === 'tv' && Object.keys(BAD.casos).join() === 'b' && BAD.fallos.length === 0 && BAD.total === 3);
+t('beta: los reportes importados se recortan y se validan', BAD.reportes.length === 1 && BAD.reportes[0].nota.length === 600);
+const ROOT = path.join(__dirname, '..'), rd = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+const MAN = JSON.parse(rd('manifest.webmanifest'));
+const pngSize = (f) => { const b = fs.readFileSync(path.join(ROOT, f)); return b.readUInt32BE(16) + 'x' + b.readUInt32BE(20); };
+t('pwa: manifiesto completo (nombre, inicio relativo, standalone, iconos 192, 512 y maskable)', MAN.name === 'ECG en Ruta' && MAN.start_url === './' && MAN.scope === './' && MAN.display === 'standalone' &&
+  MAN.icons.every((i) => fs.existsSync(path.join(ROOT, i.src)) && pngSize(i.src) === i.sizes) && MAN.icons.some((i) => i.purpose === 'maskable') && MAN.icons.some((i) => i.sizes === '192x192'));
+t('pwa: icono de iOS de 180 px', pngSize('icons/apple-touch-icon.png') === '180x180');
+const SW = rd('sw.js'), IDX = rd('index.html');
+const SWA = JSON.parse(SW.match(/const ASSETS = (\[.*\]);/)[1]), SWB = SW.match(/const BUILD = '(\w+)'/)[1];
+const IMGM = E('IMG_META');
+t('pwa: la caché sin conexión incluye la app, el banco de oclusiones, el manifiesto, los iconos y todas las imágenes', ['index.html', 'occ_data.js', 'manifest.webmanifest', ...MAN.icons.map((i) => i.src), 'icons/apple-touch-icon.png', ...IMGM.map((m) => 'img/' + m.file)].every((f) => SWA.includes(f)));
+t('pwa: todo lo que se guarda existe y no sobra ninguna imagen', SWA.every((f) => fs.existsSync(path.join(ROOT, f))) && fs.readdirSync(path.join(ROOT, 'img')).every((f) => IMGM.some((m) => m.file === f)));
+t('pwa: la caché pesa menos de 20 MB', SWA.reduce((a, f) => a + fs.statSync(path.join(ROOT, f)).size, 0) < 20e6);
+t('pwa: la misma huella en la app y en la caché, y sin marcadores sin sustituir', /^[0-9a-f]{8}$/.test(SWB) && IDX.includes("BUILD = '" + SWB + "'") && !IDX.includes('__BUILD__') && !SW.includes('__'));
+t('pwa: la página enlaza el manifiesto y el icono de iOS', /<link rel="manifest" href="manifest\.webmanifest">/.test(IDX) && /apple-touch-icon/.test(IDX) && /apple-mobile-web-app-capable/.test(IDX));
+const UIJS = rd('src/ui.js');
+t('pwa: no se registra dentro de un iframe ni sin https (el artefacto de Claude sigue funcionando igual)', /if \(embedded\(\) \|\| !\('serviceWorker' in navigator\)\) return;/.test(UIJS) && /location\.protocol === 'https:'/.test(UIJS));
+t('teclado: escribir en el reporte no pasa de caso ni responde', /\['SELECT', 'INPUT', 'TEXTAREA'\]\.includes\(e\.target\.tagName\)/.test(UIJS));
+t('aviso: página de aviso docente y privacidad enlazada desde el pie y el inicio', /id="about-link"/.test(TPL) && /No es un producto sanitario/.test(UIJS) && /Sin cuenta, sin cookies, sin analítica/.test(UIJS));
+t('beta: el botón de reporte está en los cuatro modos', ['12 derivaciones', 'Monitor', 'Oclusión coronaria', 'Imagen'].every((m) => UIJS.includes("reportBox({ modo: '" + m + "'")));
+t('beta: aciertos por caso en los cuatro modos', ["caseRec('e:'", "caseRec('m:'", "caseRec('o:'", "caseRec('i:'"].every((x) => UIJS.includes(x)));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

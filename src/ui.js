@@ -1,6 +1,7 @@
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
+const APP_VERSION = '0.9 beta', BUILD = '__BUILD__'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
 const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
@@ -29,12 +30,20 @@ async function loadBank() {
 }
 
 /* ---------- Estado guardado ---------- */
-const DEF = { settings: { noise: 'ambulancia', answer: 'opts', ctx: false, zoom: 1, groups: { ritmo: true, cond: true, isq: true, otros: true } }, stats: {}, missed: [], total: 0 };
+const DEF = { settings: { noise: 'ambulancia', answer: 'opts', ctx: false, zoom: 1, groups: { ritmo: true, cond: true, isq: true, otros: true } }, stats: {}, missed: [], total: 0, cf: {}, reports: [], aviso: false };
 const clone = (o) => JSON.parse(JSON.stringify(o));
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && s.settings) return { ...clone(DEF), ...s, settings: { ...DEF.settings, ...s.settings, groups: { ...DEF.settings.groups, ...(s.settings.groups || {}) } } };
+    if (s && s.settings) {
+      const o = { ...clone(DEF), ...s, settings: { ...DEF.settings, ...s.settings, groups: { ...DEF.settings.groups, ...(s.settings.groups || {}) } } };
+      const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+      if (!isObj(o.stats)) o.stats = {};
+      if (!isObj(o.cf)) o.cf = {};
+      if (!Array.isArray(o.missed)) o.missed = [];
+      if (!Array.isArray(o.reports)) o.reports = [];
+      return o;
+    }
   } catch (e) { /* almacenamiento no disponible */ }
   return clone(DEF);
 }
@@ -256,7 +265,8 @@ function feedback(meta, grade, ans, P) {
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      h('div', { class: 'src' }, SRC[1] + meta.id + (meta.sex ? ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') : '') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · ' + SRC[2] + ' · artefacto simulado')));
+      h('div', { class: 'src' }, SRC[1] + meta.id + (meta.sex ? ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') : '') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · ' + SRC[2] + ' · artefacto simulado'),
+      reportBox({ modo: '12 derivaciones', ref: 'e:' + meta.id, caso: 'ECG ' + meta.id + ' · ' + SRC[1].replace(/ · $| n\.º $/, ''), etiqueta: C.name + (sec.length ? ' (también: ' + sec.join(', ') + ')' : ''), resp: ans ? CATS[ans].name : null })));
 }
 
 const SYS = h('details', { class: 'sys' }, h('summary', {}, 'Lectura sistemática'),
@@ -290,13 +300,119 @@ function markButtons(btns, meta, ans, grade) {
     else b.classList.add('dim');
   }
 }
+// aciertos por caso ([respuestas, aciertos, parciales]): con la copia exportada se ve qué casos falla casi todo el mundo
+function caseRec(key, g) { const a = S.cf[key] || (S.cf[key] = [0, 0, 0]); a[0]++; if (g === 'ok') a[1]++; if (g === 'partial') a[2]++; }
 function record(meta, grade) {
   const s = S.stats[meta.c] || (S.stats[meta.c] = { n: 0, ok: 0, p: 0 });
   s.n++; if (grade === 'ok') s.ok++; if (grade === 'partial') s.p++;
-  S.total++;
+  S.total++; caseRec('e:' + meta.id, grade);
   S.missed = S.missed.filter((x) => x !== meta.id);
   if (grade !== 'ok') { S.missed.unshift(meta.id); S.missed = S.missed.slice(0, 80); }
   save();
+}
+
+/* ---------- Reportes y envío (beta) ---------- */
+const MOTIVOS = {
+  '12 derivaciones': ['El diagnóstico o la etiqueta', 'El trazado', 'Las medidas o la explicación', 'Otro'],
+  'Monitor': ['El ritmo', 'La conducta', 'El trazado', 'La explicación', 'Otro'],
+  'Oclusión coronaria': ['La arteria o el momento', 'El trazado', 'Las medidas o la explicación', 'Otro'],
+  'Imagen': ['El diagnóstico', 'La imagen', 'La explicación o el contexto', 'Otro'],
+};
+const verStr = () => APP_VERSION + ' (' + BUILD + ')';
+// Comparte con la hoja del sistema (WhatsApp, correo…); si no hay, descarga el archivo o copia el texto
+async function shareOut({ title, text, file }) {
+  try {
+    if (file) { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ title, files: [file] }); return 'shared'; } }
+    else if (navigator.share) { await navigator.share({ title, text }); return 'shared'; }
+  } catch (e) { if (e && e.name === 'AbortError') return 'cancel'; }
+  if (file) {
+    const a = h('a', { href: URL.createObjectURL(file), download: file.name, class: 'hidden' });
+    document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    return 'downloaded';
+  }
+  try { await navigator.clipboard.writeText(text); return 'copied'; } catch (e) { return 'fail'; }
+}
+async function sendReports(list, note, after) {
+  if (!list.length) return;
+  const text = reportText(list, verStr());
+  const res = await shareOut({ title: 'ECG en Ruta · casos dudosos', text });
+  if (res === 'shared' || res === 'copied') { list.forEach((r) => { r.env = 1; }); save(); }
+  note.replaceChildren(
+    res === 'shared' ? 'Enviado.' :
+    res === 'copied' ? 'Copiado: pégalo en WhatsApp o en un correo para quien te pasó la app.' :
+    res === 'cancel' ? '' :
+    h('div', {}, 'Este navegador no deja compartir ni copiar solo. Copia el texto a mano:', h('textarea', { class: 'copybox', rows: 6, readonly: true }, text)));
+  if (after) after(res);
+}
+function reportBox(info) {
+  const box = h('div', { class: 'rep' });
+  const open = h('button', { class: 'linkbtn', onclick: () => box.replaceChildren(form()) }, 'Este caso no me convence');
+  function form() {
+    let motivo = null;
+    const chips = MOTIVOS[info.modo].map((m) => h('button', { class: 'chip', onclick: () => { motivo = m; chips.forEach((c) => c.classList.toggle('on', c.textContent === m)); go.disabled = false; } }, m));
+    const ta = h('textarea', { rows: 3, maxlength: 600, placeholder: 'Qué ves tú (opcional). No escribas datos de pacientes.' });
+    const go = h('button', { class: 'btn', disabled: true, onclick: () => {
+      const r = { t: new Date().toISOString(), modo: info.modo, ref: info.ref, caso: info.caso, etiqueta: info.etiqueta, resp: info.resp || null, extra: info.extra || null, motivo, nota: ta.value.trim().slice(0, 600), env: 0 };
+      S.reports.unshift(r); S.reports = S.reports.slice(0, 300); save();
+      const note = h('div', { class: 'small' });
+      box.replaceChildren(h('div', { class: 'repform' }, h('div', {}, h('b', {}, 'Reporte guardado en este dispositivo. '), 'Envíalo ahora o, más tarde, todos juntos desde Progreso.'),
+        h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => sendReports([r], note) }, 'Enviar ahora')), note));
+    } }, 'Guardar reporte');
+    return h('div', { class: 'repform' }, h('b', {}, '¿Qué no te convence?'), h('div', { class: 'row' }, chips), ta,
+      h('div', { class: 'row' }, go, h('button', { class: 'btn ghost', onclick: () => box.replaceChildren(open) }, 'Cancelar')));
+  }
+  box.append(open);
+  return box;
+}
+const todayStr = () => new Date().toISOString().slice(0, 10);
+function backupCard() {
+  const msg = h('div', { class: 'small' });
+  const bExp = h('button', { class: 'btn', onclick: async () => {
+    const data = buildExport(S, APP_VERSION, BUILD, new Date().toISOString());
+    const file = new File([JSON.stringify(data)], 'ecg-en-ruta-progreso-' + todayStr() + '.json', { type: 'application/json' });
+    const res = await shareOut({ title: 'ECG en Ruta · mi progreso', file });
+    msg.replaceChildren(res === 'shared' ? 'Enviado.' : res === 'downloaded' ? 'Descargado: ' + file.name + '.' : '');
+  } }, 'Enviar o guardar mi progreso');
+  const inp = h('input', { type: 'file', accept: '.json,application/json', class: 'hidden', onchange: async () => {
+    const f = inp.files && inp.files[0]; inp.value = '';
+    if (!f) return;
+    const d = parseImport(await f.text(), new Set(byId.keys()));
+    if (d.error) { msg.replaceChildren(d.error); return; }
+    msg.replaceChildren(h('div', {}, 'La copia' + (d.fecha ? ' del ' + fechaES(d.fecha) : '') + ' tiene ' + d.total + ' respuestas y ' + d.reportes.length + ' reportes. Sustituirá tu progreso actual (' + S.total + ' respuestas). '),
+      h('div', { class: 'row', style: 'margin-top:6px' },
+        h('button', { class: 'btn', onclick: () => {
+          const seen = new Set(S.reports.map((r) => r.t + r.ref));
+          S.stats = d.stats; S.cf = d.casos; S.missed = d.fallos; S.total = d.total;
+          S.reports = [...S.reports, ...d.reportes.filter((r) => !seen.has(r.t + r.ref))].slice(0, 300);
+          save(); stats();
+        } }, 'Cargar la copia'),
+        h('button', { class: 'btn ghost', onclick: () => msg.replaceChildren() }, 'Cancelar')));
+  } });
+  return h('div', { class: 'card' },
+    h('div', { class: 'row' }, bExp, h('button', { class: 'btn ghost', onclick: () => inp.click() }, 'Cargar una copia'), inp),
+    h('div', { class: 'small muted', style: 'margin-top:8px' }, 'Un archivo con tus aciertos por diagnóstico y por caso y tus reportes, sin ningún dato personal. Sirve para enviárselo a quien coordina la beta o para pasar tu progreso a otro dispositivo.'),
+    msg);
+}
+function reportsCard() {
+  const note = h('div', { class: 'small' });
+  if (!S.reports.length) return h('div', { class: 'card small muted' }, 'Ninguno por ahora. Si un caso te parece mal etiquetado o mal explicado, pulsa «Este caso no me convence» al final de su explicación.');
+  const pend = S.reports.filter((r) => !r.env);
+  const pills = [];
+  const pill = (r) => { const el = h('span', { class: 'pill' + (r.env ? '' : ' warn') }, r.env ? 'Enviado' : 'Pendiente'); pills.push([el, r]); return el; };
+  const list = h('div', { class: 'replist' }, S.reports.slice(0, 30).map((r) => h('div', { class: 'repitem' },
+    h('div', {}, h('b', {}, r.caso), h('div', { class: 'small muted' }, fechaES(r.t) + ' · ' + r.modo + ' · ' + r.motivo + (r.nota ? ' · «' + r.nota + '»' : ''))),
+    pill(r))));
+  let armed = false;
+  const bClear = h('button', { class: 'btn ghost', onclick: () => {
+    if (!armed) { armed = true; bClear.textContent = '¿Seguro? Pulsa otra vez'; return; }
+    S.reports = []; save(); stats();
+  } }, 'Vaciar la lista');
+  return h('div', { class: 'card' }, list, S.reports.length > 30 ? h('div', { class: 'small muted' }, 'Y ' + (S.reports.length - 30) + ' más.') : null,
+    h('div', { class: 'row', style: 'margin-top:10px' },
+      h('button', { class: 'btn', onclick: (e) => sendReports(S.reports.some((r) => !r.env) ? S.reports.filter((r) => !r.env) : S.reports, note, () => {
+        pills.forEach(([el, r]) => { el.className = 'pill' + (r.env ? '' : ' warn'); el.textContent = r.env ? 'Enviado' : 'Pendiente'; });
+        if (!S.reports.some((r) => !r.env)) e.target.textContent = 'Volver a enviar todos';
+      }) }, pend.length ? 'Enviar pendientes (' + pend.length + ')' : 'Volver a enviar todos'), bClear), note);
 }
 
 /* ---------- Vistas ---------- */
@@ -304,7 +420,7 @@ let current = null;
 function mount(...els) { if (current && current.destroy) current.destroy(); current = null; app.replaceChildren(...els); window.scrollTo(0, 0); }
 let keyHandler = null;
 const setKeys = (fn) => { keyHandler = fn; };
-document.addEventListener('keydown', (e) => { if (keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && e.target.tagName !== 'SELECT') keyHandler(e); });
+document.addEventListener('keydown', (e) => { if (keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && !['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) keyHandler(e); });
 
 function seg(values, cur, onPick) {
   return h('div', { class: 'seg' }, values.map(([k, label]) => h('button', { class: k === cur ? 'on' : '', onclick: () => onPick(k) }, label)));
@@ -315,7 +431,12 @@ function home() {
   const n = ECG_META.filter((m) => sel.has(m.c)).length;
   const tot = Object.values(S.stats).reduce((a, s) => a + s.n, 0), ok = Object.values(S.stats).reduce((a, s) => a + s.ok, 0);
   const rerender = () => { save(); home(); };
-  mount(
+  const banner = S.aviso ? null : h('div', { class: 'banner' },
+    h('div', {}, h('b', {}, 'Herramienta de formación. '), 'No sirve para interpretar ECG de pacientes ni sustituye a los protocolos de tu servicio. No recoge datos: tu progreso se queda en este dispositivo.'),
+    h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => { S.aviso = true; rerender(); } }, 'Entendido'), h('button', { class: 'btn ghost', onclick: () => about() }, 'Aviso y privacidad')));
+  installSlot = h('span');
+  fillInstall();
+  mount(banner || '',
     h('div', { class: 'hero' }, h('h2', {}, 'Electros reales, sin contexto y con el ruido de la calle.'),
       h('p', {}, ECG_META.length + ' ECG reales de 12 derivaciones etiquetados por especialistas, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos, ' + IMG_META.filter((m) => m.q !== false).length + ' ECG clásicos en imagen y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
     h('div', { class: 'grid3' },
@@ -340,7 +461,8 @@ function home() {
       h('div', {}, tot ? h('span', {}, h('b', {}, tot + ' respuestas'), ' · ' + Math.round(100 * ok / tot) + ' % de acierto') : h('span', { class: 'muted' }, 'Aún no has respondido ninguno.')),
       h('div', { class: 'row' },
         h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'),
-        h('button', { class: 'btn ghost', onclick: stats }, 'Ver por diagnóstico'))));
+        h('button', { class: 'btn ghost', onclick: stats }, 'Ver por diagnóstico'))),
+    h('div', { class: 'row small', style: 'margin:14px 2px 0' }, h('button', { class: 'linkbtn', onclick: () => about() }, 'Aviso, privacidad y uso sin cobertura'), installSlot));
 }
 
 function caseShell(titleBits) {
@@ -493,7 +615,7 @@ function stats() {
   let armed = false;
   const reset = h('button', { class: 'btn ghost', onclick: () => {
     if (!armed) { armed = true; reset.textContent = '¿Seguro? Pulsa otra vez'; return; }
-    S.stats = {}; S.missed = []; S.total = 0; save(); stats();
+    S.stats = {}; S.missed = []; S.total = 0; S.cf = {}; save(); stats();
   } }, 'Borrar progreso');
   mount(caseShell([h('span', { class: 'title' }, 'Progreso por diagnóstico')]),
     h('div', { class: 'card' }, Object.entries(GROUPS).map(([g, gn]) => [h('div', { class: 'sec-title', style: 'margin-top:8px' }, gn),
@@ -516,7 +638,9 @@ function stats() {
         const s = S.stats['m_' + c] || { n: 0, ok: 0 }, p = s.n ? s.ok / s.n : 0;
         return h('div', { class: 'stat' }, h('span', {}, MON_CATS[c].name), h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(100 * p) + '%;background:' + (p >= 0.8 ? 'var(--ok)' : p >= 0.5 ? 'var(--warn)' : 'var(--bad)') })), h('span', { class: 'small muted', style: 'text-align:right' }, s.n ? Math.round(100 * p) + ' % · ' + s.n : '—'));
       })),
-    h('div', { class: 'next', style: 'margin-top:14px' }, reset, h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'), h('button', { class: 'btn', onclick: () => practice(false) }, 'Practicar')));
+    h('div', { class: 'next', style: 'margin-top:14px' }, reset, h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'), h('button', { class: 'btn', onclick: () => practice(false) }, 'Practicar')),
+    h('div', { class: 'sec-title', id: 'reportes' }, 'Casos que no te convencen'), reportsCard(),
+    h('div', { class: 'sec-title' }, 'Copia del progreso'), backupCard());
 }
 
 
@@ -651,6 +775,7 @@ function makeMonitor(opt = {}) {
     destroy() { cancelAnimationFrame(st.raf); ro.disconnect(); },
   };
 }
+const CTX_NAME = { parada: 'parada', inestable: 'con pulso e inestable', pulso: 'con pulso y estable' };
 const ctxText = (m, ctx) => m.c === 'riva' ? CONTEXTO_RIVA : CONTEXTOS[ctx];
 function monFeedback(m, ctx, res, rAns, kAns, P) {
   const C = MON_CATS[m.c], okK = conductaOk(m, ctx);
@@ -669,6 +794,8 @@ function monFeedback(m, ctx, res, rAns, kAns, P) {
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
+      reportBox({ modo: 'Monitor', ref: 'm:' + m.id, caso: 'Tira ' + m.id + ' · ' + MSRC[m.db] + ' · registro ' + m.rec + (['cn', 'sph', 'ptbxl'].includes(m.db) ? '' : ' · ' + mmss(m.t0)), etiqueta: C.name + (m.acc.length ? ' (vale también ' + m.acc.map((x) => MON_CATS[x].name).join(', ') + ')' : ''), resp: rAns ? MON_CATS[rAns].name : null,
+        extra: 'Situación: ' + CTX_NAME[ctx] + ' · conducta de la app: ' + CONDUCTAS[okK] + (kAns ? ' · mi conducta: ' + CONDUCTAS[kAns] : '') }),
       h('div', { class: 'src' }, ({ cn: 'Derivación II de un ECG de Chapman-Shaoxing/Ningbo (PhysioNet), etiqueta de la fuente revisada visualmente', sph: 'Derivación II de un ECG de SPH (figshare), informe revisado por cardiólogos', ptbxl: 'Derivación II de un ECG de PTB-XL (PhysioNet), informe del cardiólogo' }[m.db] || 'Episodio anotado por expertos en ' + MSRC[m.db] + ' (PhysioNet)') + ' · artefacto simulado')));
 }
 function monAnswer(onDone, submitLabel) {
@@ -686,7 +813,7 @@ function markMon(rB, kB, m, ctx, rAns, kAns) {
 }
 function monRecord(m, res) {
   const key = 'm_' + m.c, s = S.stats[key] || (S.stats[key] = { n: 0, ok: 0, p: 0 });
-  s.n++; if (res.g === 'ok') s.ok++; if (res.g === 'partial') s.p++; S.total++; save();
+  s.n++; if (res.g === 'ok') s.ok++; if (res.g === 'partial') s.p++; S.total++; caseRec('m:' + m.id, res.g); save();
 }
 const monStats = () => Object.fromEntries(Object.keys(MON_CATS).map((c) => [c, S.stats['m_' + c]]));
 const pickCtx = (m) => m.ctx[Math.floor(R() * m.ctx.length)];
@@ -822,7 +949,7 @@ function dstGrid(p, w) {
     return h('span', { class: v >= 1 ? 'up' : v <= -1 ? 'down' : '' }, h('b', {}, l), (v > 0 ? '+' : '') + fmt(v, 1));
   }));
 }
-function occInfo(p, w) {
+function occInfo(p, w, resp) {
   const C = OCC_CATS[p.art];
   return h('div', { class: 'body' },
     h('div', {}, h('h4', {}, 'Qué está pasando'), h('div', {}, w.t < 0 ? 'ECG basal en hemodinámica, antes de inflar el balón.' : 'Balón inflado en la ' + p.loc + ': ' + (w.t === 60 ? 'primer minuto' : 'final del inflado, a los ' + mmss(w.t)) + ' de oclusión completa.'),
@@ -831,7 +958,8 @@ function occInfo(p, w) {
     h('div', {}, h('h4', {}, C.name), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
     h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
     h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-    h('div', { class: 'src' }, 'STAFF III (PhysioNet) · paciente ' + p.id + ' · arteria y tiempo de oclusión conocidos · artefacto simulado'));
+    h('div', { class: 'src' }, 'STAFF III (PhysioNet) · paciente ' + p.id + ' · arteria y tiempo de oclusión conocidos · artefacto simulado'),
+    reportBox({ modo: 'Oclusión coronaria', ref: 'o:' + p.id + '@' + w.t, caso: 'STAFF III · paciente ' + p.id + ' · ' + tLabel(w.t), etiqueta: OCC_CATS[w.t < 0 ? 'basal' : p.art].name, resp }));
 }
 function occPick() {
   const arts = ['da', 'cd', 'cx'], a = arts[Math.floor(R() * 3)];
@@ -856,13 +984,13 @@ function occPractice() {
       function answer(c) {
         if (done) return; done = true;
         const g = c === q.truth ? 'ok' : (q.truth !== 'basal' && c !== 'basal') ? 'partial' : 'bad';
-        const s = S.stats['o_' + q.truth] || (S.stats['o_' + q.truth] = { n: 0, ok: 0, p: 0 }); s.n++; if (g === 'ok') s.ok++; if (g === 'partial') s.p++; S.total++; save();
+        const s = S.stats['o_' + q.truth] || (S.stats['o_' + q.truth] = { n: 0, ok: 0, p: 0 }); s.n++; if (g === 'ok') s.ok++; if (g === 'partial') s.p++; S.total++; caseRec('o:' + q.p.id + '@' + q.w.t, g); save();
         btns.forEach((b) => { const k = b.dataset.c; b.disabled = true; b.classList.add(k === q.truth ? 'ok' : k === c ? (g === 'partial' ? 'partial' : 'bad') : 'dim'); });
         viewer.allowClean(true);
         let showBase = false;
         const bBase = h('button', { class: 'btn ghost', onclick: () => { showBase = !showBase; viewer.set(occExt(q.p, showBase ? q.p.wins[0] : q.w), newSeed(), 'limpio'); bBase.textContent = showBase ? 'Volver al ECG de la pregunta' : 'Comparar con el basal'; } }, 'Comparar con el basal');
         const V = { ok: 'Correcto', partial: 'Hay oclusión, pero no de esa arteria', bad: q.truth === 'basal' ? 'No: es el ECG basal, sin oclusión' : 'No: hay una oclusión en curso' };
-        fbBox.replaceChildren(h('div', { class: 'fb' }, h('div', { class: 'verdict ' + g }, V[g]), h('div', { class: 'body', style: 'padding-bottom:0' }, h('h3', {}, OCC_CATS[q.truth].name)), occInfo(q.p, q.w)),
+        fbBox.replaceChildren(h('div', { class: 'fb' }, h('div', { class: 'verdict ' + g }, V[g]), h('div', { class: 'body', style: 'padding-bottom:0' }, h('h3', {}, OCC_CATS[q.truth].name)), occInfo(q.p, q.w, OCC_CATS[c].name)),
           h('div', { class: 'next', style: 'margin-top:12px' }, q.w.t >= 0 ? bBase : null, h('button', { class: 'btn ghost', onclick: () => occEvolution(q.p.id, q.w.t, occPractice) }, 'Ver la evolución'), h('button', { class: 'btn', onclick: next }, 'Siguiente ›')));
         fbBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -941,7 +1069,8 @@ function imgFeedback(m, grade, ans, viewer) {
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      srcBox));
+      srcBox,
+      reportBox({ modo: 'Imagen', ref: 'i:' + m.id, caso: m.id + ' · ' + m.title, etiqueta: C.name, resp: ans ? imgName(ans) : null })));
 }
 function imgPractice() {
   setKeys(null);
@@ -965,7 +1094,7 @@ function imgPractice() {
     function answer(c) {
       if (done) return; done = true;
       const g = gradeImg(m, c);
-      const st = S.stats['i_' + m.c] || (S.stats['i_' + m.c] = { n: 0, ok: 0, p: 0 }); st.n++; if (g === 'ok') st.ok++; if (g === 'partial') st.p++; S.total++; save();
+      const st = S.stats['i_' + m.c] || (S.stats['i_' + m.c] = { n: 0, ok: 0, p: 0 }); st.n++; if (g === 'ok') st.ok++; if (g === 'partial') st.p++; S.total++; caseRec('i:' + m.id, g); save();
       btns.forEach((b) => { const x = b.dataset.c; b.disabled = true; b.classList.add(x === m.c ? 'ok' : x === c ? (g === 'partial' ? 'partial' : 'bad') : 'dim'); });
       fbBox.replaceChildren(imgFeedback(m, g, c, viewer), h('div', { class: 'next', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: next }, 'Siguiente ›')));
       fbBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -987,6 +1116,59 @@ function atlasImg(c, k) {
   app.append(imgFeedback(m, 'info', null, viewer));
   setKeys((e) => { if (e.key === 'ArrowRight') atlasImg(c, k + 1); if (e.key === 'ArrowLeft') atlasImg(c, k - 1); });
 }
+
+/* ---------- Aviso, privacidad y uso sin conexión ---------- */
+const CACHE_NAME = 'ecgenruta-' + BUILD;
+const embedded = () => { try { return window.top !== window.self; } catch (e) { return true; } };
+const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+let installEvt = null, installSlot = null;
+function fillInstall() {
+  if (!installSlot) return;
+  installSlot.replaceChildren(installEvt && !standalone() ? h('button', { class: 'btn ghost', onclick: async () => { const e = installEvt; installEvt = null; e.prompt(); try { await e.userChoice; } catch (x) { /* nada */ } fillInstall(); } }, 'Instalar la app') : '');
+}
+async function offlineStatus() {
+  if (embedded()) return 'En esta vista incrustada no se guarda: ábrela en su dirección propia para usarla sin cobertura.';
+  if (!('serviceWorker' in navigator) || !window.caches) return 'Este navegador no permite guardarla para usarla sin conexión.';
+  try {
+    if (await caches.has(CACHE_NAME)) return 'Guardada en este dispositivo: funciona sin cobertura.';
+    return (await navigator.serviceWorker.getRegistration()) ? 'Guardándola para usarla sin cobertura… (unos 15 MB)' : 'Todavía no está guardada: se guarda sola al abrirla con conexión.';
+  } catch (e) { return 'No se pudo comprobar.'; }
+}
+function about() {
+  setKeys(null);
+  const st = h('span', { class: 'muted' }, 'Comprobando…');
+  offlineStatus().then((t) => { st.textContent = t; });
+  const sec = (t, ...kids) => [h('h3', {}, t), ...kids];
+  mount(caseShell([h('span', { class: 'title' }, 'Aviso y privacidad')]),
+    h('div', { class: 'card prose' },
+      sec('Qué es', h('p', {}, 'ECG en Ruta es una herramienta de formación en lectura de ECG para emergencias extrahospitalarias. No es un producto sanitario: no está pensada ni validada para interpretar ECG de pacientes ni para tomar decisiones clínicas. Las conductas resumen el ERC 2025 y las guías de la ESC con fines docentes; ante un paciente mandan los protocolos de tu servicio.')),
+      sec('Los casos', h('p', {}, 'Son ECG reales de bases de datos públicas y anonimizadas, con la etiqueta de sus autores y revisados uno a uno. Las medidas automáticas son orientativas y el artefacto es simulado. Aun así puede haber errores: si un caso no te convence, repórtalo con el botón que hay al final de cada explicación.')),
+      sec('Privacidad', h('p', {}, 'Sin cuenta, sin cookies, sin analítica y sin publicidad. Tu progreso y tus reportes se guardan solo en este dispositivo, en el almacenamiento del navegador, y solo salen de él si tú los envías. Se borran con «Borrar progreso» o al borrar los datos del sitio en el navegador.'),
+        h('p', { class: 'small muted' }, 'El alojamiento (GitHub Pages) puede registrar datos técnicos de cada visita, como la dirección IP, según su propia política de privacidad. Los enlaces a las fuentes abren webs externas.')),
+      h('h3', { id: 'instalar' }, 'Usarla sin cobertura'),
+      h('p', {}, 'La primera vez que la abres con conexión se guarda en el dispositivo y después funciona sin cobertura. Para tenerla como una app:'),
+      h('ul', {}, h('li', {}, h('b', {}, 'iPhone o iPad: '), 'en Safari, botón Compartir y «Añadir a pantalla de inicio».'),
+        h('li', {}, h('b', {}, 'Android: '), 'en Chrome, menú ⋮ e «Instalar aplicación» o «Añadir a pantalla de inicio».'),
+        h('li', {}, h('b', {}, 'Ordenador: '), 'icono de instalar en la barra de direcciones de Chrome o Edge.')),
+      h('p', {}, h('b', {}, 'En este dispositivo: '), st),
+      sec('Fuentes y licencias', h('p', {}, 'Cada fuente y su licencia figuran al pie de la página. Los trazados de Brugada-HUCA y las imágenes con licencia CC BY-SA se redistribuyen con la misma licencia.')),
+      sec('Versión', h('p', {}, verStr()))));
+}
+function toast(text, label, fn) {
+  const el = h('div', { class: 'toast' }, h('span', {}, text), label ? h('button', { class: 'btn', onclick: () => { el.remove(); fn(); } }, label) : null, h('button', { class: 'tool', 'aria-label': 'Cerrar', onclick: () => el.remove() }, '×'));
+  document.body.append(el);
+}
+function registerSW() {
+  if (embedded() || !('serviceWorker' in navigator)) return;
+  if (!(location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) return;
+  const had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) toast('Hay una versión nueva de ECG en Ruta.', 'Recargar', () => location.reload()); });
+  navigator.serviceWorker.register('sw.js').catch(() => { /* sin modo sin conexión */ });
+}
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; fillInstall(); });
+window.addEventListener('appinstalled', () => { installEvt = null; fillInstall(); });
+document.getElementById('about-link').addEventListener('click', (e) => { e.preventDefault(); about(); });
+registerSW();
 
 document.getElementById('home-link').addEventListener('click', home);
 document.getElementById('btn-stats').addEventListener('click', stats);

@@ -1,0 +1,19 @@
+{
+  "name": "ECG en Ruta",
+  "short_name": "ECG en Ruta",
+  "description": "Entrenador de lectura de ECG para emergencias extrahospitalarias: ECG reales, artefacto de ambulancia y monitor de parada y periparada.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16191d",
+  "theme_color": "#16191d",
+  "categories": ["education", "medical"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

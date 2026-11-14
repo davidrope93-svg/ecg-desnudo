@@ -10,5 +10,5 @@ jobs:
           node-version: '22'
       - name: Banco, artefacto, filtros y preguntas
         run: node tests/run.js
-      - name: index.html al día con src/
-        run: python3 build.py && git diff --exit-code index.html
+      - name: index.html y sw.js al día con src/
+        run: python3 build.py && git diff --exit-code index.html sw.js
