@@ -25,6 +25,13 @@ sel += [o for o in c if o['cat'] == 'asis' and key(o) in ASIS_OK]
 sel += [o for o in c if o['cat'] == 'riva' and key(o) in RIVA_OK]
 sel += [o for o in c if o['cat'] == 'bigem']
 sinus = [o for o in c if o['cat'] == 'sinusal']; random.shuffle(sinus); sel += sinus[:14]
+# RIVA adicional de Chapman/Ningbo (derivación II), revisado visualmente: tools/p2_monitor_riva.json
+import sys, scipy.signal as ss
+sys.path.insert(0, '/home/claude/ecg-desnudo/tools'); from p2_load import load as p2load, LN
+LP = ss.butter(4, 40, 'lowpass', fs=250, output='sos')
+for x in json.load(open('/home/claude/ecg-desnudo/tools/p2_monitor_riva.json')):
+    y = ss.sosfiltfilt(LP, p2load(x['src'], x['id'])[:, LN.index('II')])
+    sel.append(dict(cat='riva', db='cn', rec=x['id'], t0=0, sig=y.astype(np.float32), p2p=round(float(np.percentile(y, 99) - np.percentile(y, 1)), 2), lead='II'))
 CTX = {'fv': ['parada'], 'flv': ['parada'], 'tv': ['parada', 'inestable'], 'asis': ['parada'], 'riva': ['pulso'], 'bigem': ['pulso'], 'sinusal': ['parada', 'pulso']}
 blob = bytearray(); meta = []
 def varint(vals):
@@ -44,5 +51,5 @@ gz = gzip.compress(bytes(blob), 9); b64 = base64.b64encode(gz).decode()
 from collections import Counter
 print(Counter(m['c'] for m in meta), 'b64', len(b64))
 open('/home/claude/ecg-desnudo/src/monitor_data.js', 'w').write(
-    '// Generado por tools/monitor_pack.py: tiras de vfdb, cudb y MIT-BIH (PhysioNet, ODC-By), 250 Hz, filtradas 0,5–40 Hz. No editar a mano.\n'
+    '// Generado por tools/monitor_pack.py: tiras de vfdb, cudb y MIT-BIH (ODC-By) y RIVA de Chapman/Ningbo (CC BY 4.0), 250 Hz, filtradas 0,5–40 Hz. No editar a mano.\n'
     'const MON_META = %s;\nconst MON_BLOB = "%s";\n' % (json.dumps(meta, ensure_ascii=False, separators=(',', ':')), b64))

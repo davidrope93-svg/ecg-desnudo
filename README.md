@@ -8,6 +8,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 
 ## Qué hay
 
+- **Bloqueos y taquicardias (fase 2)**: Mobitz I, Mobitz II/2:1/avanzado, BAV completo, ritmo de la unión, TRNAV, TRAV, pausa sinusal y TV en 12 derivaciones (Chapman-Shaoxing/Ningbo y SPH), revisados uno a uno. Banco total: 224 ECG de 12 derivaciones y 102 tiras de monitor.
 - **Modo monitor (fase 1)**: 98 tiras reales de parada y periparada anotadas por expertos (vfdb, cudb, MIT-BIH), con barrido, ganancia, compresiones torácicas hasta la pausa de análisis y pregunta de ritmo + conducta (descarga, cardioversión sincronizada, RCP y adrenalina, o no descargar) según la situación.
 
 - **158 ECG reales** de PTB-XL (500 Hz → 250 Hz), 22 diagnósticos en 4 grupos (ritmo, conducción, isquemia, otros). Cada ECG se eligió con doble concordancia: etiqueta del cardiólogo (PTB-XL, validada) + interpretación de GE 12SL (PTB-XL+) + medidas (FC, PR, QRS, QTc, desnivel del ST). Los SCACEST exigen estadio agudo o «STEMI» de 12SL, elevación medida y, en el inferior, especular en aVL.
@@ -27,7 +28,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada. Las fuentes 
 | `src/ui.js` | Papel, compás, práctica, examen, atlas y progreso. |
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (un único archivo, sin dependencias). |
-| `tests/run.js` | 90 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
+| `tests/run.js` | 143 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros y mazo. |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```

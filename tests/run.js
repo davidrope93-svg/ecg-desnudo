@@ -113,5 +113,16 @@ const cu = MM.find((m) => m.db === 'cudb');
 t('monitor: en cudb vale FV o flutter ventricular', gradeMon(cu, 'flv', 'descarga', 'parada').g === 'ok' && gradeMon(cu, 'fv', 'descarga', 'parada').g === 'ok');
 const tvm = MM.find((m) => m.c === 'tv');
 t('monitor: nota parcial si falla la conducta', gradeMon(tvm, 'tv', 'descarga', 'inestable').g === 'partial' && gradeMon(tvm, 'asis', 'observar', 'inestable').g === 'bad');
+
+// 10. Fase 2: bloqueos y taquicardias de Chapman/Ningbo y SPH
+const F2 = META.filter((m) => m.src);
+t('fase 2: al menos 60 ECG nuevos', F2.length >= 60, F2.length);
+const LAB = { mobitz1: /Mobitz I\b/, bav2alto: /Mobitz II|avanzado|segundo grado|2:1/, bav3: /BAV completo/, trnav: /TRNAV/, trav: /TRAV/, tv: /taquicardia ventricular/, union: /unión/, paro: /paro sinusal|sinoauricular/ };
+t('fase 2: la etiqueta de la fuente respalda la categoría', F2.every((m) => !LAB[m.c] || m.rep.some((r) => LAB[m.c].test(r))), F2.filter((m) => LAB[m.c] && !m.rep.some((r) => LAB[m.c].test(r))).map((m) => m.id));
+t('fase 2: ningún bloqueo AV etiquetado también como FA o flutter', F2.filter((m) => ['mobitz1', 'bav2alto', 'bav3', 'union'].includes(m.c)).every((m) => !m.rep.some((r) => /fibrilación|flutter/.test(r))));
+const HR = { tv: (h) => h >= 110, trnav: (h) => h >= 110, trav: (h) => h >= 110, bav3: (h) => h < 60, union: (h) => h >= 35 && h <= 150 };
+t('fase 2: frecuencia coherente con el diagnóstico', F2.every((m) => !HR[m.c] || HR[m.c](m.hr)), F2.filter((m) => HR[m.c] && !HR[m.c](m.hr)).map((m) => m.id + ':' + m.hr));
+t('fase 2: TRNAV y TRAV aceptan «TSV» como hallazgo parcial', F2.filter((m) => m.c === 'trnav' || m.c === 'trav').every((m) => m.sec.includes('tsv')));
+t('fase 2: RIVA en monitor ampliado (≥ 8 tiras)', MM.filter((m) => m.c === 'riva').length >= 8);
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

@@ -230,7 +230,7 @@ function feedback(meta, grade, ans, P) {
   const C = CATS[meta.c];
   const V = { ok: 'Correcto', partial: 'Casi: eso también está, pero no es lo principal', bad: 'No es eso', info: GROUPS[C.g] };
   const facts = [];
-  if (meta.hr != null) facts.push('FC ' + meta.hr + ' lpm');
+  if (meta.hr != null) facts.push('FC ' + meta.hr + ' lpm' + (meta.src ? ' (estimada)' : ''));
   if (meta.pr != null && !['fa', 'flutter'].includes(meta.c)) facts.push('PR ' + meta.pr + ' ms');
   if (meta.qrs != null) facts.push('QRS ' + meta.qrs + ' ms');
   if (meta.qtc != null) facts.push('QTc ' + meta.qtc + ' ms');
@@ -239,7 +239,8 @@ function feedback(meta, grade, ans, P) {
   if (meta.ste.length) st.push('Elevación del ST: ' + meta.ste.join(', '));
   if (meta.std.length) st.push('Descenso del ST: ' + meta.std.join(', '));
   if (meta.avr >= 0.1) st.push('Elevación del ST en aVR: ' + fmt(meta.avr * 10, 1) + ' mm');
-  const codes = meta.k.filter((k) => CODES[k] && !(k === 'NORM' && meta.c !== 'normal')).map((k) => CODES[k] + (meta.stg && /MI$/.test(k) ? ' (' + STAGES[meta.stg] + ')' : ''));
+  const codes = meta.rep || meta.k.filter((k) => CODES[k] && !(k === 'NORM' && meta.c !== 'normal')).map((k) => CODES[k] + (meta.stg && /MI$/.test(k) ? ' (' + STAGES[meta.stg] + ')' : ''));
+  const SRC = { cn: ['Etiquetas de la fuente: ', 'Chapman-Shaoxing/Ningbo · ', 'etiqueta de la fuente revisada visualmente · FC estimada'], sph: ['Informe revisado por cardiólogos: ', 'SPH (Shandong) · ', 'FC estimada'] }[meta.src] || ['Informe del cardiólogo: ', 'PTB-XL n.º ', 'medidas automáticas GE 12SL (orientativas)'];
   const sec = meta.sec.map((c) => CATS[c].name);
   return h('div', { class: 'fb' },
     h('div', { class: 'verdict ' + grade }, V[grade]),
@@ -248,13 +249,13 @@ function feedback(meta, grade, ans, P) {
       h('div', {}, h('h4', {}, 'En este ECG'),
         h('div', { class: 'facts' }, facts.map((f) => h('span', {}, f))),
         st.length ? h('div', { class: 'small', style: 'margin-top:6px' }, st.join(' · ')) : null,
-        codes.length ? h('div', { class: 'small', style: 'margin-top:6px' }, h('b', {}, 'Informe del cardiólogo: '), codes.join(', ')) : null,
+        codes.length ? h('div', { class: 'small', style: 'margin-top:6px' }, h('b', {}, SRC[0]), codes.join(', ')) : null,
         sec.length ? h('div', { class: 'small', style: 'margin-top:4px' }, h('b', {}, 'También presente: '), sec.join(', ')) : null,
         P ? h('div', { class: 'small muted', style: 'margin-top:4px' }, h('b', {}, 'Artefacto: '), describeNoise(P)) : null),
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      h('div', { class: 'src' }, 'PTB-XL n.º ' + meta.id + ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · medidas automáticas GE 12SL (orientativas) · artefacto simulado')));
+      h('div', { class: 'src' }, SRC[1] + meta.id + ' · ' + (meta.sex === 'M' ? 'varón' : 'mujer') + (meta.age != null ? ', ' + meta.age + ' años' : '') + ' · ' + SRC[2] + ' · artefacto simulado')));
 }
 
 const SYS = h('details', { class: 'sys' }, h('summary', {}, 'Lectura sistemática'),
@@ -315,7 +316,7 @@ function home() {
   const rerender = () => { save(); home(); };
   mount(
     h('div', { class: 'hero' }, h('h2', {}, 'Electros reales, sin contexto y con el ruido de la calle.'),
-      h('p', {}, ECG_META.length + ' ECG de 12 derivaciones validados por cardiólogos, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
+      h('p', {}, ECG_META.length + ' ECG reales de 12 derivaciones etiquetados por especialistas, ' + MON_META.length + ' tiras de monitor de parada y periparada anotadas por expertos y artefacto extrahospitalario simulado. Míralo, mide con el compás y decide.')),
     h('div', { class: 'grid3' },
       h('button', { class: 'mode primary', onclick: () => practice(false) }, h('b', {}, 'Práctica'), h('span', { class: 'muted' }, 'Un ECG tras otro, con la explicación al responder. Insiste en lo que más fallas.')),
       h('button', { class: 'mode', onclick: monitorPractice }, h('b', {}, 'Monitor'), h('span', { class: 'muted' }, 'FV, TV, asistolia y más en tira de monitor real. Ritmo y conducta: ¿descargo o no?')),
@@ -505,7 +506,7 @@ function stats() {
 let MON_BYTES = null;
 const MCACHE = new Map();
 const monSig = (i) => { if (!MCACHE.has(i)) MCACHE.set(i, decodeRecord(MON_BYTES, MON_META[i].o, ECG_N, 1)[0]); return MCACHE.get(i); };
-const MSRC = { vfdb: 'MIT-BIH Malignant Ventricular Ectopy', cudb: 'CU Ventricular Tachyarrhythmia', mitdb: 'MIT-BIH Arrhythmia' };
+const MSRC = { vfdb: 'MIT-BIH Malignant Ventricular Ectopy', cudb: 'CU Ventricular Tachyarrhythmia', mitdb: 'MIT-BIH Arrhythmia', cn: 'Chapman-Shaoxing/Ningbo' };
 const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 function describeMonNoise(P) {
   if (!P || P.level === 'limpio') return 'Tira limpia.';
@@ -649,7 +650,7 @@ function monFeedback(m, ctx, res, rAns, kAns, P) {
       h('div', {}, h('h4', {}, 'Claves'), h('ul', {}, C.claves.map((x) => h('li', {}, x)))),
       h('div', { class: 'callout' }, h('h4', {}, 'Trampa'), C.trampa),
       h('div', { class: 'callout teal' }, h('h4', {}, 'En SVA'), C.sva),
-      h('div', { class: 'src' }, 'Episodio anotado por expertos en ' + MSRC[m.db] + ' (PhysioNet) · artefacto simulado')));
+      h('div', { class: 'src' }, (m.db === 'cn' ? 'Derivación II de un ECG de ' + MSRC[m.db] + ', etiqueta de la fuente revisada visualmente' : 'Episodio anotado por expertos en ' + MSRC[m.db]) + ' (PhysioNet) · artefacto simulado')));
 }
 function monAnswer(onDone, submitLabel) {
   let r = null, k = null;
