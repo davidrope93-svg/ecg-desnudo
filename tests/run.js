@@ -267,6 +267,7 @@ t('pwa: la misma huella en la app y en la caché, y sin marcadores sin sustituir
 t('pwa: la página enlaza el manifiesto y el icono de iOS', /<link rel="manifest" href="manifest\.webmanifest">/.test(IDX) && /apple-touch-icon/.test(IDX) && /apple-mobile-web-app-capable/.test(IDX));
 const UIJS = rd('src/ui.js');
 t('pwa: no se registra dentro de un iframe ni sin https (el artefacto de Claude sigue funcionando igual)', /if \(embedded\(\) \|\| !\('serviceWorker' in navigator\)\) return;/.test(UIJS) && /location\.protocol === 'https:'/.test(UIJS));
+t('pwa: no compite con el service worker de AI Studio (ai.studio, run.app) ni con otro ya registrado en la raíz, y solo avisa de versión nueva si es el suyo', /if \(hostedSW\(\)\) return clearOwnCaches\(\);/.test(UIJS) && /ai\\\.studio\|run\\\.app/.test(UIJS) && /some\(\(w\) => w && !ownSW\(w\.scriptURL\)\)\) return clearOwnCaches\(\)/.test(UIJS) && /if \(had && ctl\(\) && ownSW\(ctl\(\)\.scriptURL\)\) toast/.test(UIJS));
 t('teclado: escribir en el reporte no pasa de caso ni responde', /\['SELECT', 'INPUT', 'TEXTAREA'\]\.includes\(e\.target\.tagName\)/.test(UIJS));
 t('aviso: página de aviso docente y privacidad enlazada desde el pie y el inicio', /id="about-link"/.test(TPL) && /No es un producto sanitario/.test(UIJS) && /Sin cuenta, sin cookies, sin analítica/.test(UIJS));
 t('beta: el botón de reporte está en los cuatro modos', ['12 derivaciones', 'Monitor', 'Oclusión coronaria', 'Imagen'].every((m) => UIJS.includes("reportBox({ modo: '" + m + "'")));
