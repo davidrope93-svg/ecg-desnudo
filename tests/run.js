@@ -269,8 +269,42 @@ const UIJS = rd('src/ui.js');
 t('pwa: no se registra dentro de un iframe ni sin https (el artefacto de Claude sigue funcionando igual)', /if \(embedded\(\) \|\| !\('serviceWorker' in navigator\)\) return;/.test(UIJS) && /location\.protocol === 'https:'/.test(UIJS));
 t('pwa: no compite con el service worker de AI Studio (ai.studio, run.app) ni con otro ya registrado en la raíz, y solo avisa de versión nueva si es el suyo', /if \(hostedSW\(\)\) return clearOwnCaches\(\);/.test(UIJS) && /ai\\\.studio\|run\\\.app/.test(UIJS) && /some\(\(w\) => w && !ownSW\(w\.scriptURL\)\)\) return clearOwnCaches\(\)/.test(UIJS) && /if \(had && ctl\(\) && ownSW\(ctl\(\)\.scriptURL\)\) toast/.test(UIJS));
 t('teclado: escribir en el reporte no pasa de caso ni responde', /\['SELECT', 'INPUT', 'TEXTAREA'\]\.includes\(e\.target\.tagName\)/.test(UIJS));
-t('aviso: página de aviso docente y privacidad enlazada desde el pie y el inicio', /id="about-link"/.test(TPL) && /No es un producto sanitario/.test(UIJS) && /Sin cuenta, sin cookies, sin analítica/.test(UIJS));
+t('aviso: página de aviso docente y privacidad enlazada desde el pie y el inicio', /id="about-link"/.test(TPL) && /No es un producto sanitario/.test(UIJS) && /Sin cookies, sin analítica y sin publicidad\. Sin cuenta, tu progreso/.test(UIJS) && /Cuenta de beta tester \(opcional y solo por invitación\)/.test(UIJS));
 t('beta: el botón de reporte está en los cuatro modos', ['12 derivaciones', 'Monitor', 'Oclusión coronaria', 'Imagen'].every((m) => UIJS.includes("reportBox({ modo: '" + m + "'")));
 t('beta: aciertos por caso en los cuatro modos', ["caseRec('e:'", "caseRec('m:'", "caseRec('o:'", "caseRec('i:'"].every((x) => UIJS.includes(x)));
+// Cuentas (0.9.2): núcleo común (tests/cuenta_core.js, sin red) y fusión de contadores entre dispositivos
+{
+  const r = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'cuenta_core.js')], { encoding: 'utf8' });
+  const mc = (r.stdout || '').match(/(\d+) de (\d+) pruebas correctas/);
+  t('cuentas: núcleo (sesión, Firestore con condición de versión, errores) ' + (mc ? mc[1] + '/' + mc[2] : ''), r.status === 0 && mc && mc[1] === mc[2], (r.stdout || '') + (r.stderr || ''));
+  const CA = rd('src/cuenta_app.js'), seg = CA.slice(CA.indexOf('const accZero'), CA.indexOf('const ACC_ADAPTER'));
+  const X = new Function('clone', seg + '; return { accZero, accAdd, accMerge, accIsZero };')((o) => JSON.parse(JSON.stringify(o)));
+  const C = (n, ok, cf) => ({ stats: { fa: { n, ok, p: 0 } }, cf: cf || { 'e:1': [n, ok, 0] }, total: n }), ctx = { uid: 'u1' };
+  const L = (snap, o) => Object.assign({ dev: 'A', snap, missed: { l: [], at: '' }, reports: [], repClear: '', resetReq: null, cache: null }, o || {});
+  let m = X.accMerge(null, L(C(5, 4)), ctx);
+  t('cuentas: al enlazar, lo de este dispositivo se suma a la cuenta', m.devices.A.total === 5 && m.devices.A.stats.fa.ok === 4);
+  const sumDev = (mm) => Object.values(mm.devices).reduce((a, x) => X.accAdd(a, x), X.accZero());
+  m = X.accMerge(m, L(C(3, 3, { 'e:1': [3, 3, 0] }), { dev: 'B' }), ctx);
+  t('cuentas: dos dispositivos suman (8 respuestas, caso e:1 con 8 y 7 aciertos)', sumDev(m).total === 8 && JSON.stringify(sumDev(m).cf['e:1']) === '[8,7,0]');
+  const cacheA = { uid: 'u1', mine: C(5, 4), others: C(3, 3, { 'e:1': [3, 3, 0] }), resetAt: '' };
+  let m2 = X.accMerge(m, L(X.accAdd(C(8, 7), C(1, 0)), { cache: cacheA }), ctx);
+  t('cuentas: con caché solo sube lo nuevo (1 respuesta más: 9, sin duplicar)', sumDev(m2).total === 9 && m2.devices.A.total === 6);
+  m2 = X.accMerge(m2, L(X.accAdd(C(8, 7), C(1, 0)), { cache: { uid: 'u1', mine: m2.devices.A, others: m2.devices.B, resetAt: '' } }), ctx);
+  t('cuentas: fusionar otra vez sin cambios no infla nada', sumDev(m2).total === 9);
+  t('cuentas: la caché de otra cuenta no vale (se trata como dispositivo nuevo)', X.accMerge(null, L(C(2, 2), { cache: Object.assign({}, cacheA, { uid: 'otra' }) }), ctx).devices.A.total === 2);
+  const wiped = Object.assign({}, m2, { devices: { B: X.accZero() }, resetAt: '2026-11-16T10:00:00Z' });
+  t('cuentas: si otro dispositivo borró el progreso, lo de aquí antes de enterarse no vuelve', sumDev(X.accMerge(wiped, L(C(9, 7), { cache: cacheA }), ctx)).total === 0);
+  m = X.accMerge(m2, L(C(0, 0, {}), { resetReq: '2026-11-16T11:00:00Z' }), ctx);
+  t('cuentas: «Borrar progreso» con cuenta deja solo este dispositivo y a cero', Object.keys(m.devices).join() === 'A' && sumDev(m).total === 0 && m.resetAt === '2026-11-16T11:00:00Z');
+  const rep = (tt, ref, env) => ({ t: tt, ref, modo: 'Práctica', caso: ref, etiqueta: 'x', motivo: 'y', env });
+  m = X.accMerge({ v: 1, devices: {}, missed: { l: ['a'], at: '2026-11-16T09:00:00Z' }, reports: [rep('2026-11-01', 'r1', 1), rep('2026-11-02', 'r2', 0)], repClear: '', resetAt: '' },
+    L(C(0, 0, {}), { missed: { l: ['b'], at: '2026-11-16T08:00:00Z' }, reports: [rep('2026-11-02', 'r2', 1), rep('2026-11-03', 'r3', 0)] }), ctx);
+  t('cuentas: reportes unidos sin repetir (y «enviado» si lo está en alguno), del más nuevo al más viejo', m.reports.map((x) => x.ref).join() === 'r3,r2,r1' && m.reports[1].env === 1);
+  t('cuentas: fallos para repasar, los más recientes', m.missed.l.join() === 'a');
+  t('cuentas: «Vaciar la lista» de reportes no deja que vuelvan', X.accMerge(m, L(C(0, 0, {}), { reports: [], repClear: '2026-11-02T23:00:00Z' }), ctx).reports.map((x) => x.ref).join() === 'r3');
+  const TPLc = rd('src/template.html');
+  t('cuentas: botón en la cabecera, núcleo cargado, reglas en firebase/ y misma copia del núcleo que en SVA Trainer (versión 1)', /id="btn-acct"/.test(TPLc) && /\/\*CUENTA\*\//.test(TPLc) && /\/\*CUENTA_APP\*\//.test(UIJS) && fs.existsSync(path.join(ROOT, 'firebase', 'firestore.rules')) && /const VERSION = 1;/.test(rd('src/cuenta.js')));
+  t('cuentas: save() avisa a la cuenta; «Borrar progreso», «Cargar una copia» y «Vaciar la lista» dejan su marca', /const save = \(\) => \{ accStamp\(\);[^\n]*accTouch\(\); \};/.test(UIJS) && (UIJS.match(/accReset\(\)/g) || []).length === 2 && /S\.repClear = new Date\(\)\.toISOString\(\)/.test(UIJS));
+}
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

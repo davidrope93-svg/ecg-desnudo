@@ -11,8 +11,8 @@ for f in ASSETS[1:]:
     hs.update(f.encode()); hs.update(open(f, 'rb').read())
 BUILD = hs.hexdigest()[:8]
 t = src('template.html')
-for k, f in [('DATA', 'data.js'), ('MONDATA', 'monitor_data.js'), ('IMGDATA', 'img_data.js'), ('CONTENT', 'content.js'), ('ENGINE', 'engine.js'), ('UI', 'ui.js')]:
-    t = t.replace('/*%s*/' % k, src(f), 1)
+for k, f in [('DATA', 'data.js'), ('MONDATA', 'monitor_data.js'), ('IMGDATA', 'img_data.js'), ('CONTENT', 'content.js'), ('CUENTA', 'cuenta.js'), ('ENGINE', 'engine.js'), ('UI', 'ui.js'), ('CUENTA_APP', 'cuenta_app.js')]:
+    t = t.replace('/*%s*/' % k, src(f), 1)  # CUENTA: núcleo de cuentas común con SVA Trainer; CUENTA_APP: su adaptador, dentro de ui.js
 t = t.replace('__BUILD__', BUILD)
 head, body = t.split('<!--BODY-->', 1)
 page = ('<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'

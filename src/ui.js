@@ -1,7 +1,7 @@
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const APP_VERSION = '0.9.1 beta', BUILD = '__BUILD__'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
+const APP_VERSION = '0.9.2 beta', BUILD = '__BUILD__'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
 const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
@@ -48,7 +48,8 @@ function loadState() {
   return clone(DEF);
 }
 let S = loadState();
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin persistencia */ } };
+let acct = null, accDirty = false, accView = '', accMissedJ = JSON.stringify(S.missed); // cuenta (src/cuenta_app.js)
+const save = () => { accStamp(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin persistencia */ } accTouch(); };
 const R = rng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
 const newSeed = () => Math.floor(R() * 4294967296) >>> 0;
 const selCats = () => new Set(Object.keys(CATS).filter((c) => S.settings.groups[CATS[c].g]));
@@ -382,7 +383,7 @@ function backupCard() {
       h('div', { class: 'row', style: 'margin-top:6px' },
         h('button', { class: 'btn', onclick: () => {
           const seen = new Set(S.reports.map((r) => r.t + r.ref));
-          S.stats = d.stats; S.cf = d.casos; S.missed = d.fallos; S.total = d.total;
+          S.stats = d.stats; S.cf = d.casos; S.missed = d.fallos; S.total = d.total; accReset();
           S.reports = [...S.reports, ...d.reportes.filter((r) => !seen.has(r.t + r.ref))].slice(0, 300);
           save(); stats();
         } }, 'Cargar la copia'),
@@ -405,7 +406,7 @@ function reportsCard() {
   let armed = false;
   const bClear = h('button', { class: 'btn ghost', onclick: () => {
     if (!armed) { armed = true; bClear.textContent = '¿Seguro? Pulsa otra vez'; return; }
-    S.reports = []; save(); stats();
+    S.reports = []; S.repClear = new Date().toISOString(); save(); stats();
   } }, 'Vaciar la lista');
   return h('div', { class: 'card' }, list, S.reports.length > 30 ? h('div', { class: 'small muted' }, 'Y ' + (S.reports.length - 30) + ' más.') : null,
     h('div', { class: 'row', style: 'margin-top:10px' },
@@ -417,7 +418,7 @@ function reportsCard() {
 
 /* ---------- Vistas ---------- */
 let current = null;
-function mount(...els) { if (current && current.destroy) current.destroy(); current = null; app.replaceChildren(...els); window.scrollTo(0, 0); }
+function mount(...els) { if (current && current.destroy) current.destroy(); current = null; accView = ''; app.replaceChildren(...els); window.scrollTo(0, 0); }
 let keyHandler = null;
 const setKeys = (fn) => { keyHandler = fn; };
 document.addEventListener('keydown', (e) => { if (keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && !['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) keyHandler(e); });
@@ -432,7 +433,7 @@ function home() {
   const tot = Object.values(S.stats).reduce((a, s) => a + s.n, 0), ok = Object.values(S.stats).reduce((a, s) => a + s.ok, 0);
   const rerender = () => { save(); home(); };
   const banner = S.aviso ? null : h('div', { class: 'banner' },
-    h('div', {}, h('b', {}, 'Herramienta de formación. '), 'No sirve para interpretar ECG de pacientes ni sustituye a los protocolos de tu servicio. No recoge datos: tu progreso se queda en este dispositivo.'),
+    h('div', {}, h('b', {}, 'Herramienta de formación. '), 'No sirve para interpretar ECG de pacientes ni sustituye a los protocolos de tu servicio. Sin cuenta no recoge datos: tu progreso se queda en este dispositivo.'),
     h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => { S.aviso = true; rerender(); } }, 'Entendido'), h('button', { class: 'btn ghost', onclick: () => about() }, 'Aviso y privacidad')));
   installSlot = h('span');
   fillInstall();
@@ -463,6 +464,7 @@ function home() {
         h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'),
         h('button', { class: 'btn ghost', onclick: stats }, 'Ver por diagnóstico'))),
     h('div', { class: 'row small', style: 'margin:14px 2px 0' }, h('button', { class: 'linkbtn', onclick: () => about() }, 'Aviso, privacidad y uso sin cobertura'), installSlot));
+  accView = 'home';
 }
 
 function caseShell(titleBits) {
@@ -615,7 +617,7 @@ function stats() {
   let armed = false;
   const reset = h('button', { class: 'btn ghost', onclick: () => {
     if (!armed) { armed = true; reset.textContent = '¿Seguro? Pulsa otra vez'; return; }
-    S.stats = {}; S.missed = []; S.total = 0; S.cf = {}; save(); stats();
+    S.stats = {}; S.missed = []; S.total = 0; S.cf = {}; accReset(); save(); stats();
   } }, 'Borrar progreso');
   mount(caseShell([h('span', { class: 'title' }, 'Progreso por diagnóstico')]),
     h('div', { class: 'card' }, Object.entries(GROUPS).map(([g, gn]) => [h('div', { class: 'sec-title', style: 'margin-top:8px' }, gn),
@@ -641,6 +643,7 @@ function stats() {
     h('div', { class: 'next', style: 'margin-top:14px' }, reset, h('button', { class: 'btn ghost', disabled: !S.missed.length, onclick: () => practice(true) }, 'Repasar fallos (' + S.missed.length + ')'), h('button', { class: 'btn', onclick: () => practice(false) }, 'Practicar')),
     h('div', { class: 'sec-title', id: 'reportes' }, 'Casos que no te convencen'), reportsCard(),
     h('div', { class: 'sec-title' }, 'Copia del progreso'), backupCard());
+  accView = 'stats';
 }
 
 
@@ -1149,7 +1152,8 @@ function about() {
     h('div', { class: 'card prose' },
       sec('Qué es', h('p', {}, 'ECG en Ruta es una herramienta de formación en lectura de ECG para emergencias extrahospitalarias. No es un producto sanitario: no está pensada ni validada para interpretar ECG de pacientes ni para tomar decisiones clínicas. Las conductas resumen el ERC 2025 y las guías de la ESC con fines docentes; ante un paciente mandan los protocolos de tu servicio.')),
       sec('Los casos', h('p', {}, 'Son ECG reales de bases de datos públicas y anonimizadas, con la etiqueta de sus autores y revisados uno a uno. Las medidas automáticas son orientativas y el artefacto es simulado. Aun así puede haber errores: si un caso no te convence, repórtalo con el botón que hay al final de cada explicación.')),
-      sec('Privacidad', h('p', {}, 'Sin cuenta, sin cookies, sin analítica y sin publicidad. Tu progreso y tus reportes se guardan solo en este dispositivo, en el almacenamiento del navegador, y solo salen de él si tú los envías. Se borran con «Borrar progreso» o al borrar los datos del sitio en el navegador.'),
+      sec('Privacidad', h('p', {}, 'Sin cookies, sin analítica y sin publicidad. Sin cuenta, tu progreso y tus reportes se guardan solo en este dispositivo, en el almacenamiento del navegador, y solo salen de él si tú los envías. Se borran con «Borrar progreso» o al borrar los datos del sitio en el navegador.'),
+        h('p', {}, 'Cuenta de beta tester (opcional y solo por invitación): si entras, se guardan tu nombre, tu correo y tu progreso (aciertos por diagnóstico y por caso, fallos para repasar y reportes) en Google Firebase, con los datos en Madrid, para que los tengas en cualquier dispositivo y para que quien coordina la beta vea cómo va. La misma cuenta sirve en SVA Trainer. Puedes borrar la cuenta y sus datos desde tu cuenta cuando quieras.'),
         h('p', { class: 'small muted' }, 'El alojamiento (GitHub Pages) puede registrar datos técnicos de cada visita, como la dirección IP, según su propia política de privacidad. Los enlaces a las fuentes abren webs externas.')),
       h('h3', { id: 'instalar' }, 'Usarla sin cobertura'),
       h('p', {}, 'La primera vez que la abres con conexión se guarda en el dispositivo y después funciona sin cobertura. Para tenerla como una app:'),
@@ -1179,6 +1183,7 @@ window.addEventListener('appinstalled', () => { installEvt = null; fillInstall()
 document.getElementById('about-link').addEventListener('click', (e) => { e.preventDefault(); about(); });
 registerSW();
 
+/*CUENTA_APP*/
 document.getElementById('home-link').addEventListener('click', home);
 document.getElementById('btn-stats').addEventListener('click', stats);
 
@@ -1188,6 +1193,7 @@ document.getElementById('btn-stats').addEventListener('click', stats);
     await loadBank();
     document.getElementById('loading').remove();
     home();
+    accInit();
   } catch (err) {
     document.getElementById('loading').textContent = 'No se pudo cargar: ' + err.message;
   }

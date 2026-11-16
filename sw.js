@@ -1,5 +1,5 @@
 /* ECG en Ruta · funcionamiento sin conexión. Generado por build.py: no editar sw.js en la raíz, sino src/sw.js. */
-const BUILD = '8fd12a5a';
+const BUILD = 'd9191b95';
 const CACHE = 'ecgenruta-' + BUILD;
 const ASSETS = ["index.html", "occ_data.js", "manifest.webmanifest", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "img/dewinter_1.jpg", "img/dextrocardia_1.jpg", "img/hiperk_1.jpg", "img/hiperk_2.jpg", "img/hiperk_3.jpg", "img/hipoca_1.jpg", "img/hipoca_2.jpg", "img/hipok_1.jpg", "img/hipok_2.jpg", "img/hipotermia_1.jpg", "img/hsa_1.jpg", "img/hsa_1m.jpg", "img/iam_post_1.jpg", "img/pericarditis_1.jpg", "img/pericarditis_2.jpg", "img/pericarditis_3.jpg", "img/pericarditis_4.jpg", "img/sgarbossa_1.jpg", "img/taponamiento_1.jpg", "img/taponamiento_2.jpg", "img/tep_1.jpg", "img/wellens_1.jpg", "img/wellens_2.jpg", "img/wellens_3.jpg", "img/wellens_3d.jpg"];
 self.addEventListener('install', (e) => {
