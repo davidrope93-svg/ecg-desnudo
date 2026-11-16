@@ -8,6 +8,7 @@ Entrenador de lectura de ECG para emergencias extrahospitalarias. Usuario: médi
 
 - Una fase por sesión. Al empezar: leer `FUENTES.md` (mapa de fuentes y orden) y el estado de abajo.
 - Construir y probar: `python3 build.py && node tests/run.js` (genera `index.html` y `sw.js`; los dos se suben). `index.html` es lo que publica GitHub Pages (rama `main`, raíz): https://davidrope93-svg.github.io/ecg-desnudo/
+- Google AI Studio (vista previa y publicación en Cloud Run): `package.json` + `server.js`, sin dependencias. `npm run dev` sirve la raíz en el puerto 3000; `npm run build` copia a `dist/` solo lo que la app carga (`index.html`, `sw.js`, `occ_data.js`, `manifest.webmanifest`, `icons/`, `img/`); `npm start` sirve `dist/` con `$PORT`. Si la app empieza a cargar otro archivo, añadirlo también a `PUBLIC` en `server.js` (y a `ASSETS` en `build.py`). No añadir dependencias de npm: con Bun, sin `package.json` o con uno roto, AI Studio no arranca.
 - Un ECG solo entra con doble comprobación: etiqueta de la fuente + medidas automáticas o revisión visual del trazado. Si hay duda, fuera. Nunca etiquetas inventadas ni criterios sin fuente (ERC 2025, ESC 2023, 4.ª definición universal).
 - Ningbo tiene errores de etiqueta conocidos: revisión visual de cada caso. MIMIC-IV-ECG solo tiene informe automático: último recurso.
 - Al cerrar cada fase: añadir pruebas, regenerar `index.html`, subir a `main`, actualizar el estado de abajo y dejar al usuario una lista corta de casos para que los valide.

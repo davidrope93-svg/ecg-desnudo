@@ -1,3 +1,5 @@
 shot*.png
 review_*.png
 tools/__pycache__/
+dist/
+node_modules/
