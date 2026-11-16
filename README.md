@@ -10,6 +10,7 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada; y si se aña
 
 ## Qué hay
 
+- **Cuentas de beta tester (0.9.2, 16/11/2026)**: botón «Entrar» en la cabecera. Opcional y solo por invitación: con cuenta, los aciertos por diagnóstico y por caso, los fallos para repasar y los reportes se guardan en la nube (Firebase, datos en Madrid) y se ven en cualquier dispositivo. Es la misma cuenta que en SVA Trainer. Cada dispositivo sube su parte de los contadores y el total es la suma, así nada se cuenta dos veces. El administrador invita desde «Administración», ve el progreso de cada tester y descarga todos los reportes en CSV. Sin cuenta, todo funciona como antes y no sale nada del dispositivo. Detalle en «Cuentas» más abajo.
 - **Beta y distribución (14/11/2026)**: botón «Este caso no me convence» en la explicación de los cuatro modos (motivo + comentario, se guarda en el dispositivo y se envía por WhatsApp o correo con la hoja de compartir); aciertos por caso; copia del progreso en un archivo JSON (enviar a quien coordina la beta, o pasar a otro dispositivo) con importación validada; página de aviso docente y privacidad, y aviso la primera vez. App instalable (manifiesto, iconos) que funciona sin conexión: `sw.js` guarda la app, el banco de oclusiones y las imágenes (unos 15 MB) con la huella del contenido y avisa cuando hay versión nueva. No se activa dentro de un iframe (artefacto de Claude).
 - **Cables (fase 7)**: además de brazo derecho ↔ brazo izquierdo, las inversiones brazo izquierdo ↔ pierna izquierda (la que más pasa desapercibida) y brazo derecho ↔ pierna izquierda, por transformación exacta de ECG normales reales.
 - **Monitor periparada (fase 6)**: 54 tiras nuevas (TSV, FA rápida, flutter, BAV 2.º grado y completo, bradicardia con pausas) con su conducta según el ERC 2025: cardioversión sincronizada, vagales y adenosina, control de FC, atropina, o marcapasos y perfusión si el BAV tiene QRS ancho. El monitor tiene ya 156 tiras y 13 ritmos.
@@ -38,7 +39,11 @@ Funciona en el ordenador, la tablet o el móvil, sin instalar nada; y si se aña
 | `src/template.html` | Maquetación y estilos. |
 | `build.py` | Une todo en `index.html` (sin dependencias) y genera `sw.js` desde `src/sw.js` con la lista de archivos y la huella del contenido. El banco de oclusiones va aparte en `occ_data.js` y se carga al abrir ese modo. |
 | `manifest.webmanifest`, `icons/` | App instalable. Iconos generados con `tools/make_icons.py`. |
-| `tests/run.js` | 238 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros, mazo, reportes, copia del progreso y caché sin conexión. |
+| `src/cuenta.js` | Núcleo de las cuentas, idéntico en SVA Trainer: Firebase Authentication (correo y contraseña) y Firestore por su API REST, sin librerías; ventana de cuenta y panel del administrador. Si cambias uno, copia el otro. |
+| `src/cuenta_app.js` | Lo propio de esta app: qué se guarda, la fusión de contadores por dispositivo y el detalle para el administrador. `build.py` lo mete dentro de `ui.js`. |
+| `firebase/` | Reglas de Firestore (`firestore.rules`, copia de las publicadas) y prueba contra los emuladores de Firebase (`prueba_emulador.js`). |
+| `tests/cuenta_core.js` | Pruebas del núcleo de cuentas sin red (Firestore falso). Las lanza `tests/run.js`. |
+| `tests/run.js` | 252 pruebas: decodificación idéntica a Python, contenido, opciones, artefacto (reproducible, creciente, física de electrodos), filtros, mazo, reportes, copia del progreso, caché sin conexión y cuentas (núcleo y fusión entre dispositivos). |
 | `tools/` | Selección y empaquetado desde PhysioNet (`select.py`, `final.py`, `pack.py`). |
 
 ```
@@ -50,3 +55,12 @@ python3 build.py && node tests/run.js
 Los trazados derivados de Brugada-HUCA (Costa Cortez y García Iglesias, 2026) se redistribuyen bajo CC BY-SA 4.0, como exige su licencia. Las imágenes de `img/` son de Wikimedia Commons; cada una conserva su licencia (CC BY o CC BY-SA) y su autor, que se muestran en la app y en `src/img_data.js`; están redimensionadas. Uso docente sin ánimo de lucro: antes de cualquier uso comercial, revisar las 5 imágenes señaladas en `CLAUDE.md`.
 
 Wagner P, et al. PTB-XL, a large publicly available electrocardiography dataset (v1.0.3). PhysioNet, 2022. Strodthoff N, et al. PTB-XL+ (v1.0.1). PhysioNet, 2023. Ambos CC BY 4.0. El artefacto es simulado. Herramienta docente.
+
+## Cuentas
+
+- Proyecto de Firebase `apps-docentes-sva` (cuenta de Google de David), plan gratuito Spark. Authentication con correo y contraseña; Firestore en `europe-southwest1` (Madrid). Es el mismo proyecto para SVA Trainer y ECG en Ruta. En GitHub Pages las dos apps comparten origen, así que la sesión iniciada en una sirve para la otra.
+- Solo entra quien tenga invitación (`invites/{correo}`) y el correo verificado. Lo imponen las reglas de `firebase/firestore.rules`, que hay que publicar en la consola si se cambian. Administrador por configuración: davidrope93@gmail.com; también lo es cualquier invitado con rol «administrador».
+- Datos: `users/{uid}` (nombre, correo y un resumen por app para el panel) y `users/{uid}/apps/ecg` (JSON con `devices`, `missed`, `reports`, `repClear` y `resetAt`). En el dispositivo: `ecgdesnudo.dev` (identificador), `ecgdesnudo.sync` (lo último sincronizado) y `ecgdesnudo.reset`.
+- Al cerrar sesión, el dispositivo vuelve a empezar: el progreso queda en la cuenta. Al enlazar un dispositivo con progreso previo sin cuenta, ese progreso se suma a la cuenta.
+- La clave web de Firebase (`apiKey` en `src/cuenta.js`) es pública por diseño. La seguridad la dan las reglas.
+
