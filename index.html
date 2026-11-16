@@ -1061,7 +1061,7 @@ if (typeof module !== 'undefined') module.exports = { reportText, buildExport, p
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const APP_VERSION = '0.9 beta', BUILD = 'ddc3b300'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
+const APP_VERSION = '0.9.1 beta', BUILD = '8fd12a5a'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
 const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
@@ -2180,6 +2180,11 @@ function atlasImg(c, k) {
 /* ---------- Aviso, privacidad y uso sin conexión ---------- */
 const CACHE_NAME = 'ecgenruta-' + BUILD;
 const embedded = () => { try { return window.top !== window.self; } catch (e) { return true; } };
+/* Hostings que ponen su propio service worker en la raíz (AI Studio publica en *.ai.studio sobre Cloud Run): si se registrara
+   también el nuestro, se pisarían en cada carga y el aviso «Recargar» saldría en bucle. Ahí no se registra ni se guarda. */
+const hostedSW = () => /(^|\.)(ai\.studio|run\.app|usercontent\.goog)$/.test(location.hostname);
+const ownSW = (u) => { try { return /\/sw\.js$/.test(new URL(u).pathname); } catch (e) { return false; } };
+const clearOwnCaches = () => { if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith('ecgenruta-')).forEach((k) => caches.delete(k))).catch(() => {}); };
 const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 let installEvt = null, installSlot = null;
 function fillInstall() {
@@ -2188,6 +2193,7 @@ function fillInstall() {
 }
 async function offlineStatus() {
   if (embedded()) return 'En esta vista incrustada no se guarda: ábrela en su dirección propia para usarla sin cobertura.';
+  if (hostedSW()) return 'En esta dirección no se guarda para usarla sin cobertura: para eso, ábrela en davidrope93-svg.github.io/ecg-desnudo.';
   if (!('serviceWorker' in navigator) || !window.caches) return 'Este navegador no permite guardarla para usarla sin conexión.';
   try {
     if (await caches.has(CACHE_NAME)) return 'Guardada en este dispositivo: funciona sin cobertura.';
@@ -2218,11 +2224,14 @@ function toast(text, label, fn) {
   const el = h('div', { class: 'toast' }, h('span', {}, text), label ? h('button', { class: 'btn', onclick: () => { el.remove(); fn(); } }, label) : null, h('button', { class: 'tool', 'aria-label': 'Cerrar', onclick: () => el.remove() }, '×'));
   document.body.append(el);
 }
-function registerSW() {
+async function registerSW() {
   if (embedded() || !('serviceWorker' in navigator)) return;
   if (!(location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) return;
-  const had = !!navigator.serviceWorker.controller;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had) toast('Hay una versión nueva de ECG en Ruta.', 'Recargar', () => location.reload()); });
+  if (hostedSW()) return clearOwnCaches();
+  const prev = await navigator.serviceWorker.getRegistration().catch(() => null);
+  if (prev && [prev.active, prev.waiting, prev.installing].some((w) => w && !ownSW(w.scriptURL))) return clearOwnCaches(); // la raíz ya tiene otro dueño
+  const ctl = () => navigator.serviceWorker.controller, had = !!ctl() && ownSW(ctl().scriptURL);
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && ctl() && ownSW(ctl().scriptURL)) toast('Hay una versión nueva de ECG en Ruta.', 'Recargar', () => location.reload()); });
   navigator.serviceWorker.register('sw.js').catch(() => { /* sin modo sin conexión */ });
 }
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; fillInstall(); });
