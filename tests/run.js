@@ -306,5 +306,6 @@ t('beta: aciertos por caso en los cuatro modos', ["caseRec('e:'", "caseRec('m:'"
   t('cuentas: botón en la cabecera, núcleo cargado, reglas en firebase/ y misma copia del núcleo que en SVA Trainer (versión 1)', /id="btn-acct"/.test(TPLc) && /\/\*CUENTA\*\//.test(TPLc) && /\/\*CUENTA_APP\*\//.test(UIJS) && fs.existsSync(path.join(ROOT, 'firebase', 'firestore.rules')) && /const VERSION = 1;/.test(rd('src/cuenta.js')));
   t('cuentas: save() avisa a la cuenta; «Borrar progreso», «Cargar una copia» y «Vaciar la lista» dejan su marca', /const save = \(\) => \{ accStamp\(\);[^\n]*accTouch\(\); \};/.test(UIJS) && (UIJS.match(/accReset\(\)/g) || []).length === 2 && /S\.repClear = new Date\(\)\.toISOString\(\)/.test(UIJS));
 }
+t('dominio propio (0.9.3): CNAME ecgenruta.es y la cuenta enlaza a svatrainer.es y ecgenruta.es', rd('CNAME').trim() === 'ecgenruta.es' && /url: 'https:\/\/svatrainer\.es\/'/.test(rd('src/cuenta.js')) && /url: 'https:\/\/ecgenruta\.es\/'/.test(rd('src/cuenta.js')) && !/github\.io/.test(rd('src/cuenta.js')));
 console.log(`${pass} pruebas superadas, ${fail} fallidas`);
 process.exit(fail ? 1 : 0);

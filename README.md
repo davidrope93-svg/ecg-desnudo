@@ -4,12 +4,13 @@
 
 Entrenador de lectura de ECG para SVA extrahospitalaria: ECG reales de 12 derivaciones, sin contexto, con artefacto de ambulancia simulado electrodo a electrodo.
 
-**Abrir el entrenador:** https://davidrope93-svg.github.io/ecg-desnudo/
+**Abrir el entrenador:** https://ecgenruta.es/ (la dirección antigua de GitHub Pages redirige aquí)
 
 Funciona en el ordenador, la tablet o el móvil, sin instalar nada; y si se añade a la pantalla de inicio, se instala como una app y funciona sin cobertura. Las fuentes de ECG previstas y lo que cubre cada una están en [FUENTES.md](FUENTES.md).
 
 ## Qué hay
 
+- **Dominio propio (0.9.3)**: https://ecgenruta.es/; la cuenta enlaza a svatrainer.es y ecgenruta.es (se entra una vez en cada app).
 - **Cuentas de beta tester (0.9.2, 16/11/2026)**: botón «Entrar» en la cabecera. Opcional y solo por invitación: con cuenta, los aciertos por diagnóstico y por caso, los fallos para repasar y los reportes se guardan en la nube (Firebase, datos en Madrid) y se ven en cualquier dispositivo. Es la misma cuenta que en SVA Trainer. Cada dispositivo sube su parte de los contadores y el total es la suma, así nada se cuenta dos veces. El administrador invita desde «Administración», ve el progreso de cada tester y descarga todos los reportes en CSV. Sin cuenta, todo funciona como antes y no sale nada del dispositivo. Detalle en «Cuentas» más abajo.
 - **Beta y distribución (14/11/2026)**: botón «Este caso no me convence» en la explicación de los cuatro modos (motivo + comentario, se guarda en el dispositivo y se envía por WhatsApp o correo con la hoja de compartir); aciertos por caso; copia del progreso en un archivo JSON (enviar a quien coordina la beta, o pasar a otro dispositivo) con importación validada; página de aviso docente y privacidad, y aviso la primera vez. App instalable (manifiesto, iconos) que funciona sin conexión: `sw.js` guarda la app, el banco de oclusiones y las imágenes (unos 15 MB) con la huella del contenido y avisa cuando hay versión nueva. No se activa dentro de un iframe (artefacto de Claude).
 - **Cables (fase 7)**: además de brazo derecho ↔ brazo izquierdo, las inversiones brazo izquierdo ↔ pierna izquierda (la que más pasa desapercibida) y brazo derecho ↔ pierna izquierda, por transformación exacta de ECG normales reales.
