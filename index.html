@@ -708,8 +708,8 @@ if (typeof module !== 'undefined') module.exports.IMG = { IMG_CATS };
 (function (root) {
 'use strict';
 const CFG = { apiKey: 'AIzaSyAMskjVwnXmal6RdXSMhaZgiNr8eWLO7a4', projectId: 'apps-docentes-sva', admins: ['davidrope93@gmail.com'],
-  apps: { sva: { name: 'SVA Trainer', url: 'https://davidrope93-svg.github.io/simulador-transporte/' }, ecg: { name: 'ECG en Ruta', url: 'https://davidrope93-svg.github.io/ecg-desnudo/' } } };
-const SKEY = 'apps-sva.cuenta'; // la sesión: en GitHub Pages las dos apps comparten origen, así que una sesión sirve para las dos
+  apps: { sva: { name: 'SVA Trainer', url: 'https://svatrainer.es/' }, ecg: { name: 'ECG en Ruta', url: 'https://ecgenruta.es/' } } };
+const SKEY = 'apps-sva.cuenta'; // la sesión: es por dirección (con svatrainer.es y ecgenruta.es, se entra una vez en cada app; la cuenta y el progreso son los mismos)
 const VERSION = 1;
 
 /* ---------- utilidades ---------- */
@@ -1475,7 +1475,7 @@ if (typeof module !== 'undefined') module.exports = { reportText, buildExport, p
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const APP_VERSION = '0.9.2 beta', BUILD = 'd9191b95'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
+const APP_VERSION = '0.9.3 beta', BUILD = '171ab477'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
 const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
@@ -2610,7 +2610,7 @@ function fillInstall() {
 }
 async function offlineStatus() {
   if (embedded()) return 'En esta vista incrustada no se guarda: ábrela en su dirección propia para usarla sin cobertura.';
-  if (hostedSW()) return 'En esta dirección no se guarda para usarla sin cobertura: para eso, ábrela en davidrope93-svg.github.io/ecg-desnudo.';
+  if (hostedSW()) return 'En esta dirección no se guarda para usarla sin cobertura: para eso, ábrela en ecgenruta.es.';
   if (!('serviceWorker' in navigator) || !window.caches) return 'Este navegador no permite guardarla para usarla sin conexión.';
   try {
     if (await caches.has(CACHE_NAME)) return 'Guardada en este dispositivo: funciona sin cobertura.';

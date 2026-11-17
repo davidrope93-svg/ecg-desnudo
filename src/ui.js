@@ -1,7 +1,7 @@
 /* Interfaz: papel milimetrado, compás, práctica, examen, atlas y progreso. */
 (() => {
 'use strict';
-const APP_VERSION = '0.9.2 beta', BUILD = '__BUILD__'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
+const APP_VERSION = '0.9.3 beta', BUILD = '__BUILD__'; // BUILD lo pone build.py: huella del contenido, la misma que la caché sin conexión
 const KEY = 'ecgdesnudo.v1'; // nombre antiguo del proyecto: se mantiene para no perder el progreso guardado
 const app = document.getElementById('app');
 const h = (tag, a, ...kids) => {
@@ -1136,7 +1136,7 @@ function fillInstall() {
 }
 async function offlineStatus() {
   if (embedded()) return 'En esta vista incrustada no se guarda: ábrela en su dirección propia para usarla sin cobertura.';
-  if (hostedSW()) return 'En esta dirección no se guarda para usarla sin cobertura: para eso, ábrela en davidrope93-svg.github.io/ecg-desnudo.';
+  if (hostedSW()) return 'En esta dirección no se guarda para usarla sin cobertura: para eso, ábrela en ecgenruta.es.';
   if (!('serviceWorker' in navigator) || !window.caches) return 'Este navegador no permite guardarla para usarla sin conexión.';
   try {
     if (await caches.has(CACHE_NAME)) return 'Guardada en este dispositivo: funciona sin cobertura.';
